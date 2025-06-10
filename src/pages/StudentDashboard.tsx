@@ -1,232 +1,212 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Video, MessageCircle, Book, Phone, Heart, Clock, User } from 'lucide-react';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
+import { Calendar, MessageSquare, Video, Clock, User, LogOut } from 'lucide-react';
+
+interface Session {
+  id: string;
+  status: string;
+  scheduled_at: string;
+  created_at: string;
+  counsellor: {
+    first_name: string;
+    last_name: string;
+  };
+}
 
 const StudentDashboard = () => {
-  const [upcomingAppointments] = useState([
-    {
-      id: 1,
-      counsellor: "Dr. Sarah Johnson",
-      date: "2024-06-12",
-      time: "2:00 PM",
-      type: "Video Call",
-      status: "confirmed"
-    },
-    {
-      id: 2,
-      counsellor: "Prof. Michael Chen",
-      date: "2024-06-15",
-      time: "10:00 AM", 
-      type: "In-Person",
-      status: "pending"
-    }
-  ]);
+  const [sessions, setSessions] = useState<Session[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
-  const [recentSessions] = useState([
-    {
-      id: 1,
-      counsellor: "Dr. Sarah Johnson",
-      date: "2024-06-08",
-      duration: "50 minutes",
-      notes: "Discussed anxiety management techniques"
-    },
-    {
-      id: 2,
-      counsellor: "Dr. Emily Davis",
-      date: "2024-06-01",
-      duration: "45 minutes",
-      notes: "Focused on stress reduction strategies"
+  useEffect(() => {
+    if (user) {
+      fetchSessions();
     }
-  ]);
+  }, [user]);
+
+  const fetchSessions = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('counselling_sessions')
+        .select(`
+          id,
+          status,
+          scheduled_at,
+          created_at,
+          counsellor:profiles!counselling_sessions_counsellor_id_fkey(first_name, last_name)
+        `)
+        .eq('student_id', user?.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setSessions(data || []);
+    } catch (error) {
+      console.error('Error fetching sessions:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load your sessions",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
+
+  const joinSession = (sessionId: string) => {
+    navigate(`/video-call?session=${sessionId}`);
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'active': return 'bg-green-500';
+      case 'pending': return 'bg-yellow-500';
+      case 'completed': return 'bg-blue-500';
+      case 'cancelled': return 'bg-red-500';
+      default: return 'bg-gray-500';
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
-      
-      <div className="container mx-auto px-4 py-8">
-        {/* Welcome Section */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">Welcome back, John!</h1>
-          <p className="text-muted-foreground">Here's an overview of your mental health journey</p>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <Button className="h-20 flex-col space-y-2">
-            <Video className="h-6 w-6" />
-            <span>Start Video Call</span>
-          </Button>
-          <Button variant="outline" className="h-20 flex-col space-y-2">
-            <MessageCircle className="h-6 w-6" />
-            <span>Send Message</span>
-          </Button>
-          <Button variant="outline" className="h-20 flex-col space-y-2">
-            <Calendar className="h-6 w-6" />
-            <span>Book Session</span>
-          </Button>
-          <Button variant="outline" className="h-20 flex-col space-y-2">
-            <Phone className="h-6 w-6 text-red-500" />
-            <span>Emergency Help</span>
-          </Button>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Upcoming Appointments */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Calendar className="h-5 w-5" />
-                  <span>Upcoming Appointments</span>
-                </CardTitle>
-                <CardDescription>Your scheduled counselling sessions</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {upcomingAppointments.map((appointment) => (
-                    <div key={appointment.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
-                      <div className="flex items-center space-x-4">
-                        <div className="h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center">
-                          <User className="h-5 w-5 text-primary" />
-                        </div>
-                        <div>
-                          <h3 className="font-semibold">{appointment.counsellor}</h3>
-                          <p className="text-sm text-muted-foreground">
-                            {appointment.date} at {appointment.time}
-                          </p>
-                          <div className="flex items-center space-x-2 mt-1">
-                            <Badge variant={appointment.type === 'Video Call' ? 'default' : 'secondary'}>
-                              {appointment.type}
-                            </Badge>
-                            <Badge variant={appointment.status === 'confirmed' ? 'default' : 'outline'}>
-                              {appointment.status}
-                            </Badge>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex space-x-2">
-                        {appointment.type === 'Video Call' && (
-                          <Button size="sm">
-                            <Video className="h-4 w-4 mr-2" />
-                            Join
-                          </Button>
-                        )}
-                        <Button size="sm" variant="outline">
-                          <MessageCircle className="h-4 w-4 mr-2" />
-                          Message
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <Button variant="outline" className="w-full mt-4">
-                  Schedule New Appointment
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Recent Sessions */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Clock className="h-5 w-5" />
-                  <span>Recent Sessions</span>
-                </CardTitle>
-                <CardDescription>Your past counselling sessions</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {recentSessions.map((session) => (
-                    <div key={session.id} className="p-4 border border-border rounded-lg">
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="font-semibold">{session.counsellor}</h3>
-                        <span className="text-sm text-muted-foreground">{session.date}</span>
-                      </div>
-                      <p className="text-sm text-muted-foreground mb-2">Duration: {session.duration}</p>
-                      <p className="text-sm">{session.notes}</p>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+      {/* Header */}
+      <div className="border-b bg-card">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">Student Dashboard</h1>
+            <p className="text-muted-foreground">Welcome back, {user?.user_metadata?.first_name || 'Student'}</p>
           </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Mental Health Tip */}
-            <Card className="bg-gradient-to-br from-blue-50 to-green-50">
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Heart className="h-5 w-5 text-primary" />
-                  <span>Daily Wellness Tip</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm">
-                  "Take 5 minutes today to practice deep breathing. Inhale for 4 counts, 
-                  hold for 4, exhale for 6. This simple technique can help reduce stress 
-                  and improve your mood."
-                </p>
-              </CardContent>
-            </Card>
-
-            {/* Quick Resources */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Book className="h-5 w-5" />
-                  <span>Quick Resources</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Button variant="ghost" className="w-full justify-start">
-                  <Heart className="h-4 w-4 mr-2" />
-                  Self-Care Checklist
-                </Button>
-                <Button variant="ghost" className="w-full justify-start">
-                  <MessageCircle className="h-4 w-4 mr-2" />
-                  Mood Tracker
-                </Button>
-                <Button variant="ghost" className="w-full justify-start">
-                  <Book className="h-4 w-4 mr-2" />
-                  Coping Strategies
-                </Button>
-                <Button variant="ghost" className="w-full justify-start">
-                  <Video className="h-4 w-4 mr-2" />
-                  Guided Meditation
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Emergency Support */}
-            <Card className="border-red-200 bg-red-50">
-              <CardHeader>
-                <CardTitle className="text-red-700">Emergency Support</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-red-600 mb-4">
-                  If you're experiencing a mental health crisis, don't hesitate to reach out.
-                </p>
-                <Button variant="destructive" className="w-full mb-2">
-                  <Phone className="h-4 w-4 mr-2" />
-                  Call Crisis Hotline
-                </Button>
-                <Button variant="outline" className="w-full border-red-200 text-red-600">
-                  Emergency Chat
-                </Button>
-              </CardContent>
-            </Card>
+          <div className="flex items-center gap-4">
+            <Button variant="outline" onClick={() => navigate('/contact')}>
+              Find Counsellor
+            </Button>
+            <Button variant="ghost" onClick={handleSignOut}>
+              <LogOut className="h-4 w-4 mr-2" />
+              Sign Out
+            </Button>
           </div>
         </div>
       </div>
 
-      <Footer />
+      <div className="container mx-auto px-4 py-8">
+        <div className="grid gap-6">
+          {/* Quick Actions */}
+          <section>
+            <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
+            <div className="grid md:grid-cols-3 gap-4">
+              <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/contact')}>
+                <CardHeader className="pb-4">
+                  <div className="flex items-center gap-3">
+                    <Video className="h-8 w-8 text-primary" />
+                    <div>
+                      <CardTitle className="text-lg">Start Video Session</CardTitle>
+                      <CardDescription>Connect with a counsellor now</CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+              </Card>
+              
+              <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/contact')}>
+                <CardHeader className="pb-4">
+                  <div className="flex items-center gap-3">
+                    <MessageSquare className="h-8 w-8 text-primary" />
+                    <div>
+                      <CardTitle className="text-lg">Chat Support</CardTitle>
+                      <CardDescription>Text-based counselling</CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+              </Card>
+              
+              <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/resources')}>
+                <CardHeader className="pb-4">
+                  <div className="flex items-center gap-3">
+                    <Calendar className="h-8 w-8 text-primary" />
+                    <div>
+                      <CardTitle className="text-lg">Resources</CardTitle>
+                      <CardDescription>Self-help tools and guides</CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+              </Card>
+            </div>
+          </section>
+
+          {/* Your Sessions */}
+          <section>
+            <h2 className="text-xl font-semibold mb-4">Your Sessions</h2>
+            {sessions.length === 0 ? (
+              <Card>
+                <CardContent className="pt-6 text-center">
+                  <User className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">No sessions yet</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Start your mental health journey by connecting with a counsellor
+                  </p>
+                  <Button onClick={() => navigate('/contact')}>Find a Counsellor</Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-4">
+                {sessions.map((session) => (
+                  <Card key={session.id}>
+                    <CardContent className="pt-6">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className={`w-3 h-3 rounded-full ${getStatusColor(session.status)}`}></div>
+                          <div>
+                            <h3 className="font-semibold">
+                              Session with Dr. {session.counsellor.first_name} {session.counsellor.last_name}
+                            </h3>
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <Clock className="h-4 w-4" />
+                              {session.scheduled_at 
+                                ? new Date(session.scheduled_at).toLocaleString()
+                                : 'Immediate session'
+                              }
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Badge variant={session.status === 'active' ? 'default' : 'secondary'}>
+                            {session.status}
+                          </Badge>
+                          {(session.status === 'pending' || session.status === 'active') && (
+                            <Button onClick={() => joinSession(session.id)}>
+                              Join Session
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </section>
+        </div>
+      </div>
     </div>
   );
 };
