@@ -1,89 +1,63 @@
 
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Mental Health Awareness Website Design System */
-
 @layer base {
   :root {
-    --background: 248 250 252;
-    --foreground: 15 23 42;
-
-    --card: 255 255 255;
-    --card-foreground: 15 23 42;
-
-    --popover: 255 255 255;
-    --popover-foreground: 15 23 42;
-
-    --primary: 14 165 233;
-    --primary-foreground: 248 250 252;
-
-    --secondary: 34 197 94;
-    --secondary-foreground: 15 23 42;
-
-    --muted: 241 245 249;
-    --muted-foreground: 100 116 139;
-
-    --accent: 59 130 246;
-    --accent-foreground: 248 250 252;
-
-    --destructive: 239 68 68;
-    --destructive-foreground: 248 250 252;
-
-    --border: 226 232 240;
-    --input: 226 232 240;
-    --ring: 14 165 233;
-
-    --radius: 0.75rem;
-
-    --sidebar-background: 248 250 252;
-    --sidebar-foreground: 71 85 105;
-    --sidebar-primary: 14 165 233;
-    --sidebar-primary-foreground: 248 250 252;
-    --sidebar-accent: 241 245 249;
-    --sidebar-accent-foreground: 71 85 105;
-    --sidebar-border: 226 232 240;
-    --sidebar-ring: 14 165 233;
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 200 100% 40%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 160 30% 96%;
+    --secondary-foreground: 160 30% 10%;
+    --muted: 160 5% 96%;
+    --muted-foreground: 160 5% 45%;
+    --accent: 160 30% 90%;
+    --accent-foreground: 160 30% 15%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 160 10% 90%;
+    --input: 160 10% 90%;
+    --ring: 200 100% 40%;
+    --radius: 0.5rem;
+    --chart-1: 200 100% 40%;
+    --chart-2: 160 60% 50%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
   }
 
   .dark {
-    --background: 15 23 42;
-    --foreground: 248 250 252;
-
-    --card: 30 41 59;
-    --card-foreground: 248 250 252;
-
-    --popover: 30 41 59;
-    --popover-foreground: 248 250 252;
-
-    --primary: 59 130 246;
-    --primary-foreground: 15 23 42;
-
-    --secondary: 34 197 94;
-    --secondary-foreground: 248 250 252;
-
-    --muted: 51 65 85;
-    --muted-foreground: 148 163 184;
-
-    --accent: 99 102 241;
-    --accent-foreground: 248 250 252;
-
-    --destructive: 239 68 68;
-    --destructive-foreground: 248 250 252;
-
-    --border: 51 65 85;
-    --input: 51 65 85;
-    --ring: 59 130 246;
-
-    --sidebar-background: 15 23 42;
-    --sidebar-foreground: 203 213 225;
-    --sidebar-primary: 59 130 246;
-    --sidebar-primary-foreground: 15 23 42;
-    --sidebar-accent: 51 65 85;
-    --sidebar-accent-foreground: 203 213 225;
-    --sidebar-border: 51 65 85;
-    --sidebar-ring: 59 130 246;
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 200 100% 50%;
+    --primary-foreground: 222.2 84% 4.9%;
+    --secondary: 160 15% 15%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 160 15% 15%;
+    --muted-foreground: 160 15% 65%;
+    --accent: 160 15% 15%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 160 15% 20%;
+    --input: 160 15% 20%;
+    --ring: 200 100% 50%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
   }
 }
 
@@ -91,26 +65,18 @@
   * {
     @apply border-border;
   }
-
   body {
     @apply bg-background text-foreground font-sans;
-  }
-
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-semibold;
+    font-family: 'Inter', sans-serif;
   }
 }
 
-@layer components {
-  .gradient-bg {
-    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--secondary)) 100%);
-  }
-  
-  .glass-card {
-    @apply bg-white/80 backdrop-blur-sm border border-white/20 shadow-lg;
-  }
-  
-  .hero-section {
-    background: linear-gradient(135deg, hsl(var(--primary))/10 0%, hsl(var(--secondary))/10 100%);
-  }
+.gradient-bg {
+  background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 50%, #10b981 100%);
+}
+
+.glass-effect {
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }

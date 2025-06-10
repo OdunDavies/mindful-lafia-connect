@@ -9,7 +9,8 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Heart, ArrowLeft } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 
 const SignUp = () => {
   const [userType, setUserType] = useState('student');
@@ -30,63 +31,79 @@ const SignUp = () => {
   });
   
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const { signUp } = useAuth();
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (formData.password !== formData.confirmPassword) {
-      toast({
-        title: "Error",
-        description: "Passwords do not match",
-        variant: "destructive",
-      });
       return;
     }
 
     if (!formData.agreeToTerms) {
-      toast({
-        title: "Error",
-        description: "Please agree to the terms and conditions",
-        variant: "destructive",
-      });
       return;
     }
 
-    toast({
-      title: "Success!",
-      description: "Account created successfully. Please check your email for verification.",
-    });
+    const userData = {
+      first_name: formData.firstName,
+      last_name: formData.lastName,
+      user_type: userType,
+      phone: formData.phone,
+    };
 
-    // Simulate account creation and redirect to dashboard
-    setTimeout(() => {
-      navigate(userType === 'student' ? '/student-dashboard' : '/counsellor-dashboard');
-    }, 2000);
+    const { error } = await signUp(formData.email, formData.password, userData);
+
+    if (!error) {
+      // Create additional profile data
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
+        if (userType === 'student') {
+          await supabase.from('student_profiles').insert({
+            id: user.id,
+            student_id: formData.studentId,
+            department: formData.department,
+            level: formData.level,
+          });
+        } else {
+          await supabase.from('counsellor_profiles').insert({
+            id: user.id,
+            specialization: formData.specialization,
+            license_number: formData.licenseNumber,
+            experience: formData.experience,
+          });
+        }
+      }
+
+      setTimeout(() => {
+        navigate(userType === 'student' ? '/student-dashboard' : '/counsellor-dashboard');
+      }, 2000);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center p-4">
+    <div className="min-h-screen gradient-bg flex items-center justify-center p-4">
       <div className="w-full max-w-2xl">
         <div className="text-center mb-8">
-          <Link to="/" className="inline-flex items-center space-x-2 text-primary hover:text-primary/80 mb-4">
+          <Link to="/" className="inline-flex items-center space-x-2 text-white hover:text-white/80 mb-4">
             <ArrowLeft className="h-4 w-4" />
             <span>Back to Home</span>
           </Link>
           <div className="flex items-center justify-center space-x-2 mb-4">
-            <Heart className="h-8 w-8 text-primary" />
-            <h1 className="text-2xl font-bold text-foreground">FULAFIA Counselling</h1>
+            <Heart className="h-8 w-8 text-white" />
+            <h1 className="text-2xl font-bold text-white">FULAFIA Counselling</h1>
           </div>
-          <p className="text-muted-foreground">Create your account to access mental health support</p>
+          <p className="text-white/90">Create your account to access mental health support</p>
         </div>
 
-        <Card>
+        <Card className="glass-effect border-white/20">
           <CardHeader>
-            <CardTitle>Create Account</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-white">Create Account</CardTitle>
+            <CardDescription className="text-white/80">
               Join our community and get access to professional mental health support
             </CardDescription>
           </CardHeader>
@@ -94,15 +111,15 @@ const SignUp = () => {
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* User Type Selection */}
               <div className="space-y-3">
-                <Label className="text-base font-medium">I am a:</Label>
+                <Label className="text-base font-medium text-white">I am a:</Label>
                 <RadioGroup value={userType} onValueChange={setUserType}>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="student" id="student" />
-                    <Label htmlFor="student">Student seeking mental health support</Label>
+                    <Label htmlFor="student" className="text-white">Student seeking mental health support</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="counsellor" id="counsellor" />
-                    <Label htmlFor="counsellor">Licensed Counsellor/Mental Health Professional</Label>
+                    <Label htmlFor="counsellor" className="text-white">Licensed Counsellor/Mental Health Professional</Label>
                   </div>
                 </RadioGroup>
               </div>
@@ -110,29 +127,31 @@ const SignUp = () => {
               {/* Personal Information */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="firstName">First Name</Label>
+                  <Label htmlFor="firstName" className="text-white">First Name</Label>
                   <Input
                     id="firstName"
                     placeholder="Enter your first name"
                     value={formData.firstName}
                     onChange={(e) => handleInputChange('firstName', e.target.value)}
                     required
+                    className="bg-white/10 border-white/20 text-white placeholder:text-white/60"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="lastName">Last Name</Label>
+                  <Label htmlFor="lastName" className="text-white">Last Name</Label>
                   <Input
                     id="lastName"
                     placeholder="Enter your last name"
                     value={formData.lastName}
                     onChange={(e) => handleInputChange('lastName', e.target.value)}
                     required
+                    className="bg-white/10 border-white/20 text-white placeholder:text-white/60"
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
+                <Label htmlFor="email" className="text-white">Email Address</Label>
                 <Input
                   id="email"
                   type="email"
@@ -140,11 +159,12 @@ const SignUp = () => {
                   value={formData.email}
                   onChange={(e) => handleInputChange('email', e.target.value)}
                   required
+                  className="bg-white/10 border-white/20 text-white placeholder:text-white/60"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number</Label>
+                <Label htmlFor="phone" className="text-white">Phone Number</Label>
                 <Input
                   id="phone"
                   type="tel"
@@ -152,6 +172,7 @@ const SignUp = () => {
                   value={formData.phone}
                   onChange={(e) => handleInputChange('phone', e.target.value)}
                   required
+                  className="bg-white/10 border-white/20 text-white placeholder:text-white/60"
                 />
               </div>
 
@@ -159,21 +180,22 @@ const SignUp = () => {
               {userType === 'student' && (
                 <>
                   <div className="space-y-2">
-                    <Label htmlFor="studentId">Student ID</Label>
+                    <Label htmlFor="studentId" className="text-white">Student ID</Label>
                     <Input
                       id="studentId"
                       placeholder="Enter your student ID"
                       value={formData.studentId}
                       onChange={(e) => handleInputChange('studentId', e.target.value)}
                       required
+                      className="bg-white/10 border-white/20 text-white placeholder:text-white/60"
                     />
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="department">Department</Label>
+                      <Label htmlFor="department" className="text-white">Department</Label>
                       <Select onValueChange={(value) => handleInputChange('department', value)}>
-                        <SelectTrigger>
+                        <SelectTrigger className="bg-white/10 border-white/20 text-white">
                           <SelectValue placeholder="Select your department" />
                         </SelectTrigger>
                         <SelectContent>
@@ -191,9 +213,9 @@ const SignUp = () => {
                     </div>
                     
                     <div className="space-y-2">
-                      <Label htmlFor="level">Academic Level</Label>
+                      <Label htmlFor="level" className="text-white">Academic Level</Label>
                       <Select onValueChange={(value) => handleInputChange('level', value)}>
-                        <SelectTrigger>
+                        <SelectTrigger className="bg-white/10 border-white/20 text-white">
                           <SelectValue placeholder="Select your level" />
                         </SelectTrigger>
                         <SelectContent>
@@ -214,9 +236,9 @@ const SignUp = () => {
               {userType === 'counsellor' && (
                 <>
                   <div className="space-y-2">
-                    <Label htmlFor="specialization">Specialization</Label>
+                    <Label htmlFor="specialization" className="text-white">Specialization</Label>
                     <Select onValueChange={(value) => handleInputChange('specialization', value)}>
-                      <SelectTrigger>
+                      <SelectTrigger className="bg-white/10 border-white/20 text-white">
                         <SelectValue placeholder="Select your specialization" />
                       </SelectTrigger>
                       <SelectContent>
@@ -233,20 +255,21 @@ const SignUp = () => {
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="licenseNumber">License Number</Label>
+                      <Label htmlFor="licenseNumber" className="text-white">License Number</Label>
                       <Input
                         id="licenseNumber"
                         placeholder="Enter your license number"
                         value={formData.licenseNumber}
                         onChange={(e) => handleInputChange('licenseNumber', e.target.value)}
                         required
+                        className="bg-white/10 border-white/20 text-white placeholder:text-white/60"
                       />
                     </div>
                     
                     <div className="space-y-2">
-                      <Label htmlFor="experience">Years of Experience</Label>
+                      <Label htmlFor="experience" className="text-white">Years of Experience</Label>
                       <Select onValueChange={(value) => handleInputChange('experience', value)}>
-                        <SelectTrigger>
+                        <SelectTrigger className="bg-white/10 border-white/20 text-white">
                           <SelectValue placeholder="Select experience" />
                         </SelectTrigger>
                         <SelectContent>
@@ -265,7 +288,7 @@ const SignUp = () => {
               {/* Password fields */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password" className="text-white">Password</Label>
                   <Input
                     id="password"
                     type="password"
@@ -273,10 +296,11 @@ const SignUp = () => {
                     value={formData.password}
                     onChange={(e) => handleInputChange('password', e.target.value)}
                     required
+                    className="bg-white/10 border-white/20 text-white placeholder:text-white/60"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirm Password</Label>
+                  <Label htmlFor="confirmPassword" className="text-white">Confirm Password</Label>
                   <Input
                     id="confirmPassword"
                     type="password"
@@ -284,6 +308,7 @@ const SignUp = () => {
                     value={formData.confirmPassword}
                     onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
                     required
+                    className="bg-white/10 border-white/20 text-white placeholder:text-white/60"
                   />
                 </div>
               </div>
@@ -295,26 +320,26 @@ const SignUp = () => {
                   checked={formData.agreeToTerms}
                   onCheckedChange={(checked) => handleInputChange('agreeToTerms', checked as boolean)}
                 />
-                <Label htmlFor="terms" className="text-sm">
+                <Label htmlFor="terms" className="text-sm text-white">
                   I agree to the{' '}
-                  <Link to="/terms" className="text-primary hover:underline">
+                  <Link to="/terms" className="text-blue-200 hover:underline">
                     Terms and Conditions
                   </Link>{' '}
                   and{' '}
-                  <Link to="/privacy" className="text-primary hover:underline">
+                  <Link to="/privacy" className="text-blue-200 hover:underline">
                     Privacy Policy
                   </Link>
                 </Label>
               </div>
 
-              <Button type="submit" className="w-full" size="lg">
+              <Button type="submit" className="w-full bg-white text-primary hover:bg-white/90" size="lg">
                 Create Account
               </Button>
 
               <div className="text-center">
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-white/80">
                   Already have an account?{' '}
-                  <Link to="/signin" className="text-primary hover:underline">
+                  <Link to="/signin" className="text-blue-200 hover:underline">
                     Sign in here
                   </Link>
                 </p>

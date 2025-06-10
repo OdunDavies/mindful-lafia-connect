@@ -9,6 +9,89 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      counselling_sessions: {
+        Row: {
+          counsellor_id: string
+          created_at: string | null
+          ended_at: string | null
+          id: string
+          notes: string | null
+          scheduled_at: string | null
+          started_at: string | null
+          status: string
+          student_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          counsellor_id: string
+          created_at?: string | null
+          ended_at?: string | null
+          id?: string
+          notes?: string | null
+          scheduled_at?: string | null
+          started_at?: string | null
+          status?: string
+          student_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          counsellor_id?: string
+          created_at?: string | null
+          ended_at?: string | null
+          id?: string
+          notes?: string | null
+          scheduled_at?: string | null
+          started_at?: string | null
+          status?: string
+          student_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "counselling_sessions_counsellor_id_fkey"
+            columns: ["counsellor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "counselling_sessions_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      counsellor_profiles: {
+        Row: {
+          experience: string
+          id: string
+          license_number: string
+          specialization: string
+        }
+        Insert: {
+          experience: string
+          id: string
+          license_number: string
+          specialization: string
+        }
+        Update: {
+          experience?: string
+          id?: string
+          license_number?: string
+          specialization?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "counsellor_profiles_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       Lafia: {
         Row: {
           created_at: string
@@ -23,6 +106,110 @@ export type Database = {
           id?: number
         }
         Relationships: []
+      }
+      messages: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          message_type: string | null
+          sender_id: string
+          session_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          message_type?: string | null
+          sender_id: string
+          session_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          message_type?: string | null
+          sender_id?: string
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "counselling_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          email: string
+          first_name: string
+          id: string
+          last_name: string
+          phone: string | null
+          updated_at: string | null
+          user_type: string
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          first_name: string
+          id: string
+          last_name: string
+          phone?: string | null
+          updated_at?: string | null
+          user_type: string
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          first_name?: string
+          id?: string
+          last_name?: string
+          phone?: string | null
+          updated_at?: string | null
+          user_type?: string
+        }
+        Relationships: []
+      }
+      student_profiles: {
+        Row: {
+          department: string
+          id: string
+          level: string
+          student_id: string
+        }
+        Insert: {
+          department: string
+          id: string
+          level: string
+          student_id: string
+        }
+        Update: {
+          department?: string
+          id?: string
+          level?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_profiles_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
