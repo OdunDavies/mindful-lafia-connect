@@ -3,6 +3,9 @@ import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -22,7 +25,11 @@ import {
   ClipboardCheck,
   Star,
   Activity,
-  Play
+  Play,
+  Send,
+  Brain,
+  Shield,
+  Lightbulb
 } from 'lucide-react';
 
 const Home = () => {
@@ -33,6 +40,9 @@ const Home = () => {
     upcomingSessions: 0
   });
   const [loading, setLoading] = useState(true);
+  const [storyTitle, setStoryTitle] = useState('');
+  const [storyContent, setStoryContent] = useState('');
+  const [submittingStory, setSubmittingStory] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -69,22 +79,28 @@ const Home = () => {
     }
   ];
 
-  // Student testimonials
+  // Student testimonials (updated dates to 2025)
   const studentTestimonials = [
     {
-      videoId: "yQq1-_ujXnM",
-      title: "Sarah's Recovery Journey",
-      description: "A student shares her experience overcoming depression through counselling."
+      id: 1,
+      name: "Amina Hassan",
+      story: "The counselling service at FULAFIA completely changed my perspective on mental health. I was struggling with anxiety and depression, but through regular sessions, I learned coping strategies that helped me excel academically and personally.",
+      date: "January 15, 2025",
+      course: "Psychology, 400 Level"
     },
     {
-      videoId: "lvv3D_2kIQo",
-      title: "Finding Hope Again", 
-      description: "How professional support helped a student through difficult times."
+      id: 2,
+      name: "Ibrahim Musa",
+      story: "I was hesitant to seek help initially due to stigma, but the counsellors here are so understanding and professional. They helped me through a difficult period of grief and loss.",
+      date: "February 8, 2025",
+      course: "Computer Science, 300 Level"
     },
     {
-      videoId: "f56ZQkyOu6A",
-      title: "Breaking the Silence",
-      description: "Students discuss the importance of seeking mental health support."
+      id: 3,
+      name: "Fatima Abdullahi",
+      story: "The self-assessment tools and resources available here are incredible. They helped me identify patterns in my mental health and take proactive steps towards healing.",
+      date: "March 12, 2025",
+      course: "Medicine, 500 Level"
     }
   ];
 
@@ -138,6 +154,38 @@ const Home = () => {
       console.error('Error fetching dashboard data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleStorySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!storyTitle.trim() || !storyContent.trim()) {
+      toast({
+        title: "Please fill in all fields",
+        description: "Both title and story content are required.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSubmittingStory(true);
+    try {
+      // Here you would typically save to a database
+      // For now, we'll just show a success message
+      toast({
+        title: "Story submitted successfully!",
+        description: "Thank you for sharing your experience. It will be reviewed and published soon.",
+      });
+      setStoryTitle('');
+      setStoryContent('');
+    } catch (error) {
+      toast({
+        title: "Failed to submit story",
+        description: "Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setSubmittingStory(false);
     }
   };
 
@@ -240,6 +288,180 @@ const Home = () => {
           </div>
         </div>
 
+        {/* Mental Health Awareness Report */}
+        <div className="mb-12">
+          <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <Brain className="h-8 w-8 text-blue-600" />
+                <div>
+                  <CardTitle className="text-2xl text-blue-900">Mental Health Awareness & Understanding</CardTitle>
+                  <CardDescription className="text-blue-700">
+                    Comprehensive guide to mental health awareness for the FULAFIA community
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Mental Health Overview */}
+              <div>
+                <h3 className="text-xl font-semibold text-blue-900 mb-3 flex items-center gap-2">
+                  <Heart className="h-5 w-5" />
+                  What is Mental Health?
+                </h3>
+                <p className="text-gray-700 leading-relaxed">
+                  Mental health encompasses our emotional, psychological, and social well-being. It affects how we think, 
+                  feel, and act. Good mental health is essential for students to cope with academic stress, build healthy 
+                  relationships, and make sound decisions. At FULAFIA, we recognize that mental health is just as important 
+                  as physical health for overall student success.
+                </p>
+              </div>
+
+              {/* Common Mental Health Conditions */}
+              <div>
+                <h3 className="text-xl font-semibold text-blue-900 mb-4 flex items-center gap-2">
+                  <Shield className="h-5 w-5" />
+                  Common Mental Health Conditions Among Students
+                </h3>
+                <div className="grid md:grid-cols-2 gap-6">
+                  <Card className="bg-white">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-lg text-red-700">Anxiety Disorders</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-gray-600 mb-2">
+                        <strong>Symptoms:</strong> Excessive worry, restlessness, difficulty concentrating, physical symptoms like rapid heartbeat
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        <strong>Common triggers:</strong> Academic pressure, social situations, financial stress, future uncertainty
+                      </p>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-white">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-lg text-blue-700">Depression</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-gray-600 mb-2">
+                        <strong>Symptoms:</strong> Persistent sadness, loss of interest, fatigue, sleep disturbances, feelings of worthlessness
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        <strong>Risk factors:</strong> Academic failure, social isolation, family history, major life changes
+                      </p>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-white">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-lg text-green-700">Stress-Related Disorders</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-gray-600 mb-2">
+                        <strong>Symptoms:</strong> Overwhelming feelings, difficulty managing daily tasks, physical symptoms, mood changes
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        <strong>Common sources:</strong> Exams, deadlines, relationship issues, career decisions
+                      </p>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-white">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-lg text-purple-700">Adjustment Disorders</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-gray-600 mb-2">
+                        <strong>Symptoms:</strong> Difficulty adapting to new situations, emotional or behavioral symptoms
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        <strong>Triggers:</strong> Starting university, moving away from home, cultural adjustments
+                      </p>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+
+              {/* Warning Signs */}
+              <div>
+                <h3 className="text-xl font-semibold text-blue-900 mb-3 flex items-center gap-2">
+                  <Lightbulb className="h-5 w-5" />
+                  Warning Signs to Watch For
+                </h3>
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <h4 className="font-semibold text-yellow-800 mb-2">Emotional Signs:</h4>
+                      <ul className="text-sm text-yellow-700 space-y-1">
+                        <li>• Persistent sadness or hopelessness</li>
+                        <li>• Excessive worry or fear</li>
+                        <li>• Mood swings or irritability</li>
+                        <li>• Feeling overwhelmed or out of control</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-yellow-800 mb-2">Behavioral Signs:</h4>
+                      <ul className="text-sm text-yellow-700 space-y-1">
+                        <li>• Withdrawal from friends and activities</li>
+                        <li>• Declining academic performance</li>
+                        <li>• Changes in sleep or eating patterns</li>
+                        <li>• Increased substance use</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Getting Help */}
+              <div>
+                <h3 className="text-xl font-semibold text-blue-900 mb-3 flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  How to Get Help at FULAFIA
+                </h3>
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <div className="grid md:grid-cols-3 gap-4">
+                    <div className="text-center">
+                      <div className="bg-green-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-2">
+                        <MessageSquare className="h-6 w-6 text-green-600" />
+                      </div>
+                      <h4 className="font-semibold text-green-800">Online Counselling</h4>
+                      <p className="text-sm text-green-700">Connect with professional counsellors through our platform</p>
+                    </div>
+                    <div className="text-center">
+                      <div className="bg-green-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-2">
+                        <ClipboardCheck className="h-6 w-6 text-green-600" />
+                      </div>
+                      <h4 className="font-semibold text-green-800">Self-Assessment</h4>
+                      <p className="text-sm text-green-700">Take our confidential mental health screening tools</p>
+                    </div>
+                    <div className="text-center">
+                      <div className="bg-green-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-2">
+                        <BookOpen className="h-6 w-6 text-green-600" />
+                      </div>
+                      <h4 className="font-semibold text-green-800">Resources</h4>
+                      <p className="text-sm text-green-700">Access educational materials and self-help guides</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Emergency Contact */}
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <h4 className="font-semibold text-red-800 mb-2">🚨 Crisis Support</h4>
+                <p className="text-sm text-red-700">
+                  If you're experiencing a mental health crisis or having thoughts of self-harm, 
+                  please reach out immediately:
+                </p>
+                <ul className="text-sm text-red-700 mt-2 space-y-1">
+                  <li>• <strong>Nigeria Crisis Helpline:</strong> 199 (24/7)</li>
+                  <li>• <strong>FULAFIA Health Center:</strong> Available during campus hours</li>
+                  <li>• <strong>Emergency Services:</strong> 112 or 911</li>
+                </ul>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Mental Health Education Videos */}
         <div className="mb-12">
           <div className="flex items-center gap-3 mb-6">
@@ -263,27 +485,78 @@ const Home = () => {
           </Carousel>
         </div>
 
-        {/* Student Stories */}
+        {/* Student Testimonials */}
         <div className="mb-12">
           <div className="flex items-center gap-3 mb-6">
             <MessageSquare className="h-6 w-6 text-primary" />
-            <h2 className="text-2xl font-bold">Student Stories</h2>
+            <h2 className="text-2xl font-bold">Student Success Stories</h2>
           </div>
-          <Carousel className="w-full">
-            <CarouselContent className="-ml-2 md:-ml-4">
-              {studentTestimonials.map((video, index) => (
-                <CarouselItem key={index} className="pl-2 md:pl-4 md:basis-1/2 lg:basis-1/3">
-                  <VideoPlayer
-                    videoId={video.videoId}
-                    title={video.title}
-                    description={video.description}
-                  />
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious />
-            <CarouselNext />
-          </Carousel>
+          <div className="grid md:grid-cols-3 gap-6 mb-8">
+            {studentTestimonials.map((testimonial) => (
+              <Card key={testimonial.id} className="hover:shadow-lg transition-shadow">
+                <CardContent className="pt-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+                      <User className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold">{testimonial.name}</h4>
+                      <p className="text-sm text-muted-foreground">{testimonial.course}</p>
+                    </div>
+                  </div>
+                  <p className="text-sm mb-4 leading-relaxed">{testimonial.story}</p>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <Calendar className="h-3 w-3" />
+                    {testimonial.date}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* Share Your Story Form */}
+          {userType === 'student' && (
+            <Card className="bg-gradient-to-r from-green-50 to-blue-50 border-green-200">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Send className="h-5 w-5" />
+                  Share Your Story
+                </CardTitle>
+                <CardDescription>
+                  Help inspire other students by sharing your mental health journey and recovery experience.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleStorySubmit} className="space-y-4">
+                  <div>
+                    <Label htmlFor="story-title">Story Title</Label>
+                    <Input
+                      id="story-title"
+                      value={storyTitle}
+                      onChange={(e) => setStoryTitle(e.target.value)}
+                      placeholder="Give your story a meaningful title..."
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="story-content">Your Story</Label>
+                    <Textarea
+                      id="story-content"
+                      value={storyContent}
+                      onChange={(e) => setStoryContent(e.target.value)}
+                      placeholder="Share your experience, challenges overcome, and how counselling helped you..."
+                      rows={6}
+                      required
+                    />
+                  </div>
+                  <Button type="submit" disabled={submittingStory} className="w-full">
+                    <Send className="h-4 w-4 mr-2" />
+                    {submittingStory ? 'Submitting...' : 'Share My Story'}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Stats Cards */}

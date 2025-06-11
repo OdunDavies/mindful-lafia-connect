@@ -1,201 +1,169 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useAuth } from '@/hooks/useAuth';
-import { Heart, Home, Users, Phone, BookOpen, User, LogOut, Settings, ClipboardCheck, MessageSquare, Menu, X } from 'lucide-react';
-import { useState } from 'react';
+import { Heart, Menu, LogOut, User, Home, Users, BookOpen, ClipboardCheck, MessageSquare, Info } from 'lucide-react';
 
 const Navigation = () => {
-  const { user, signOut } = useAuth();
+  const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { user, signOut } = useAuth();
+
+  const userType = user?.user_metadata?.user_type || 'student';
+  const firstName = user?.user_metadata?.first_name || 'User';
 
   const handleSignOut = async () => {
     await signOut();
     navigate('/signin');
+    setIsOpen(false);
   };
 
-  const isActive = (path: string) => location.pathname === path;
-
-  const userType = user?.user_metadata?.user_type || 'student';
-
-  const navItems = [
-    { path: '/', label: 'Home', icon: Home },
-    { path: '/about', label: 'About', icon: BookOpen },
-    { path: '/contact', label: 'Find Counsellor', icon: Phone },
-    { path: '/resources', label: 'Resources', icon: Users },
-    { path: '/blog', label: 'Testimonies', icon: MessageSquare },
+  const studentNavItems = [
+    { name: 'Home', path: '/', icon: Home },
+    { name: 'Find Counsellor', path: '/contact', icon: Users },
+    { name: 'Self Assessment', path: '/assessment', icon: ClipboardCheck },
+    { name: 'Resources', path: '/resources', icon: BookOpen },
+    { name: 'Blog', path: '/blog', icon: MessageSquare },
+    { name: 'About', path: '/about', icon: Info },
   ];
 
-  if (userType === 'student') {
-    navItems.push({ path: '/assessment', label: 'Self Assessment', icon: ClipboardCheck });
-  }
+  const counsellorNavItems = [
+    { name: 'Home', path: '/', icon: Home },
+    { name: 'Students', path: '/contact', icon: Users },
+    { name: 'Resources', path: '/resources', icon: BookOpen },
+    { name: 'Blog', path: '/blog', icon: MessageSquare },
+    { name: 'About', path: '/about', icon: Info },
+  ];
 
-  const closeMobileMenu = () => setIsMobileMenuOpen(false);
+  const navItems = userType === 'student' ? studentNavItems : counsellorNavItems;
+  const profilePath = userType === 'student' ? '/student-profile' : '/counsellor-profile';
+
+  const NavLinks = ({ mobile = false, onItemClick = () => {} }) => (
+    <>
+      {navItems.map((item) => {
+        const Icon = item.icon;
+        const isActive = location.pathname === item.path;
+        
+        return (
+          <Link
+            key={item.path}
+            to={item.path}
+            onClick={onItemClick}
+            className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+              mobile
+                ? isActive
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                : isActive
+                ? 'bg-primary/10 text-primary'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+            }`}
+          >
+            <Icon className="h-4 w-4" />
+            {item.name}
+          </Link>
+        );
+      })}
+    </>
+  );
 
   return (
-    <nav className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b sticky top-0 z-50">
+    <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2" onClick={closeMobileMenu}>
-            <Heart className="h-8 w-8 text-primary" />
-            <div className="hidden sm:block">
-              <span className="text-xl font-bold">FULAFIA Counselling</span>
-            </div>
-            <div className="sm:hidden">
-              <span className="text-lg font-bold">FULAFIA</span>
-            </div>
+          <Link to="/" className="flex items-center space-x-2">
+            <Heart className="h-6 w-6 text-primary" />
+            <span className="text-xl font-bold">FULAFIA Counselling</span>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center space-x-1">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <Link key={item.path} to={item.path}>
-                  <Button 
-                    variant={isActive(item.path) ? "default" : "ghost"} 
-                    size="sm"
-                    className="flex items-center gap-2"
-                  >
-                    <Icon className="h-4 w-4" />
-                    <span className="hidden xl:inline">{item.label}</span>
-                  </Button>
-                </Link>
-              );
-            })}
+          <div className="hidden md:flex items-center space-x-1">
+            <NavLinks />
           </div>
 
-          {/* Mobile Menu Button */}
-          <div className="lg:hidden">
+          {/* Desktop User Menu */}
+          <div className="hidden md:flex items-center space-x-4">
+            <Link
+              to={profilePath}
+              className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            >
+              <User className="h-4 w-4" />
+              {firstName}
+            </Link>
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              onClick={handleSignOut}
+              className="flex items-center gap-2"
             >
-              {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              <LogOut className="h-4 w-4" />
+              Sign Out
             </Button>
           </div>
 
-          {/* User Menu */}
-          <div className="hidden lg:flex items-center space-x-4">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={user?.user_metadata?.avatar_url} />
-                    <AvatarFallback>
-                      {user?.user_metadata?.first_name?.[0] || user?.email?.[0]?.toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
+          {/* Mobile Navigation */}
+          <div className="md:hidden">
+            <Sheet open={isOpen} onOpenChange={setIsOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="sm">
+                  <Menu className="h-5 w-5" />
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="end" forceMount>
-                <div className="flex flex-col space-y-1 p-2">
-                  <p className="text-sm font-medium leading-none">
-                    {user?.user_metadata?.first_name} {user?.user_metadata?.last_name}
-                  </p>
-                  <p className="text-xs leading-none text-muted-foreground">
-                    {user?.email}
-                  </p>
-                  <p className="text-xs leading-none text-muted-foreground capitalize">
-                    {userType}
-                  </p>
-                </div>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link to={userType === 'student' ? '/student-profile' : '/counsellor-profile'} className="flex items-center">
-                    <User className="mr-2 h-4 w-4" />
-                    Profile
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to={userType === 'student' ? '/student-dashboard' : '/counsellor-dashboard'} className="flex items-center">
-                    <Settings className="mr-2 h-4 w-4" />
-                    Dashboard
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleSignOut} className="text-red-600">
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Sign Out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-80">
+                <div className="flex flex-col h-full">
+                  {/* Mobile Header */}
+                  <div className="flex items-center space-x-2 pb-6 border-b">
+                    <Heart className="h-6 w-6 text-primary" />
+                    <span className="text-lg font-bold">FULAFIA Counselling</span>
+                  </div>
 
-        {/* Mobile Navigation */}
-        {isMobileMenuOpen && (
-          <div className="lg:hidden pb-4 border-t border-border">
-            <div className="flex flex-col space-y-2 mt-4">
-              {navItems.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <Link key={item.path} to={item.path} onClick={closeMobileMenu}>
-                    <Button 
-                      variant={isActive(item.path) ? "default" : "ghost"} 
-                      size="sm"
-                      className="w-full justify-start flex items-center gap-2"
+                  {/* Mobile User Info */}
+                  <div className="py-6 border-b">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+                        <User className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-medium">{firstName}</p>
+                        <p className="text-sm text-muted-foreground capitalize">{userType}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Mobile Navigation Links */}
+                  <div className="flex-1 py-6 space-y-2">
+                    <NavLinks mobile onItemClick={() => setIsOpen(false)} />
+                  </div>
+
+                  {/* Mobile Footer */}
+                  <div className="border-t pt-6 space-y-2">
+                    <Link
+                      to={profilePath}
+                      onClick={() => setIsOpen(false)}
+                      className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors w-full"
                     >
-                      <Icon className="h-4 w-4" />
-                      {item.label}
+                      <User className="h-4 w-4" />
+                      My Profile
+                    </Link>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleSignOut}
+                      className="flex items-center gap-2 w-full justify-start"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Sign Out
                     </Button>
-                  </Link>
-                );
-              })}
-              
-              {/* Mobile User Menu */}
-              <div className="pt-4 border-t border-border space-y-2">
-                <div className="flex items-center gap-3 px-3 py-2">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={user?.user_metadata?.avatar_url} />
-                    <AvatarFallback>
-                      {user?.user_metadata?.first_name?.[0] || user?.email?.[0]?.toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="text-sm font-medium">
-                      {user?.user_metadata?.first_name} {user?.user_metadata?.last_name}
-                    </p>
-                    <p className="text-xs text-muted-foreground capitalize">
-                      {userType}
-                    </p>
                   </div>
                 </div>
-                
-                <Link to={userType === 'student' ? '/student-profile' : '/counsellor-profile'} onClick={closeMobileMenu}>
-                  <Button variant="ghost" size="sm" className="w-full justify-start">
-                    <User className="mr-2 h-4 w-4" />
-                    Profile
-                  </Button>
-                </Link>
-                
-                <Link to={userType === 'student' ? '/student-dashboard' : '/counsellor-dashboard'} onClick={closeMobileMenu}>
-                  <Button variant="ghost" size="sm" className="w-full justify-start">
-                    <Settings className="mr-2 h-4 w-4" />
-                    Dashboard
-                  </Button>
-                </Link>
-                
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="w-full justify-start text-red-600" 
-                  onClick={() => { handleSignOut(); closeMobileMenu(); }}
-                >
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Sign Out
-                </Button>
-              </div>
-            </div>
+              </SheetContent>
+            </Sheet>
           </div>
-        )}
+        </div>
       </div>
     </nav>
   );

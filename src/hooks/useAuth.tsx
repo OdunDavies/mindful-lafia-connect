@@ -54,7 +54,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       console.log('Ensuring profile for user:', user.id, user.user_metadata);
       
-      // Check if profile already exists
+      // Check if main profile already exists
       const { data: existingProfile, error: fetchError } = await supabase
         .from('profiles')
         .select('id, user_type')
@@ -66,86 +66,108 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      if (existingProfile) {
-        console.log('Profile already exists for user type:', existingProfile.user_type);
-        return;
-      }
-
-      // Create main profile
       const userType = user.user_metadata?.user_type || 'student';
-      console.log('Creating new profile for user type:', userType);
-      
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert({
-          id: user.id,
-          email: user.email || '',
-          first_name: user.user_metadata?.first_name || '',
-          last_name: user.user_metadata?.last_name || '',
-          user_type: userType,
-          phone: user.user_metadata?.phone || null,
-          bio: null,
-          profile_image_url: null,
-          is_online: userType === 'counsellor' ? false : null,
-          last_seen: new Date().toISOString(),
-          total_sessions: 0,
-          completed_sessions: 0,
-          cancelled_sessions: 0
-        });
+      console.log('User type:', userType);
 
-      if (profileError) {
-        console.error('Error creating profile:', profileError);
-        toast({
-          title: "Profile creation failed",
-          description: "There was an error creating your profile. Please try again.",
-          variant: "destructive",
-        });
-        return;
+      if (!existingProfile) {
+        console.log('Creating new main profile for user type:', userType);
+        
+        // Create main profile
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            id: user.id,
+            email: user.email || '',
+            first_name: user.user_metadata?.first_name || '',
+            last_name: user.user_metadata?.last_name || '',
+            user_type: userType,
+            phone: user.user_metadata?.phone || null,
+            bio: null,
+            profile_image_url: null,
+            is_online: userType === 'counsellor' ? false : null,
+            last_seen: new Date().toISOString(),
+            total_sessions: 0,
+            completed_sessions: 0,
+            cancelled_sessions: 0
+          });
+
+        if (profileError) {
+          console.error('Error creating main profile:', profileError);
+          toast({
+            title: "Profile creation failed",
+            description: "There was an error creating your profile. Please try again.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        console.log('Main profile created successfully');
       }
-
-      console.log('Main profile created successfully');
 
       // Create specific profile based on user type
       if (userType === 'student') {
-        const { error: studentError } = await supabase
+        // Check if student profile exists
+        const { data: existingStudentProfile } = await supabase
           .from('student_profiles')
-          .insert({
-            id: user.id,
-            student_id: user.user_metadata?.student_id || '',
-            department: user.user_metadata?.department || '',
-            level: user.user_metadata?.level || '',
-            academic_year: user.user_metadata?.academic_year || null,
-            emergency_contact: user.user_metadata?.emergency_contact || null,
-            emergency_phone: user.user_metadata?.emergency_phone || null
-          });
+          .select('id')
+          .eq('id', user.id)
+          .maybeSingle();
 
-        if (studentError) {
-          console.error('Error creating student profile:', studentError);
-        } else {
-          console.log('Student profile created successfully');
+        if (!existingStudentProfile) {
+          const { error: studentError } = await supabase
+            .from('student_profiles')
+            .insert({
+              id: user.id,
+              student_id: user.user_metadata?.student_id || '',
+              department: user.user_metadata?.department || '',
+              level: user.user_metadata?.level || '',
+              academic_year: user.user_metadata?.academic_year || null,
+              emergency_contact: user.user_metadata?.emergency_contact || null,
+              emergency_phone: user.user_metadata?.emergency_phone || null
+            });
+
+          if (studentError) {
+            console.error('Error creating student profile:', studentError);
+          } else {
+            console.log('Student profile created successfully');
+          }
         }
       } else if (userType === 'counsellor') {
-        const { error: counsellorError } = await supabase
+        // Check if counsellor profile exists
+        const { data: existingCounsellorProfile } = await supabase
           .from('counsellor_profiles')
-          .insert({
-            id: user.id,
-            specialization: user.user_metadata?.specialization || '',
-            license_number: user.user_metadata?.license_number || '',
-            experience: user.user_metadata?.experience || '',
-            is_verified: false,
-            verification_date: null,
-            bio: user.user_metadata?.bio || null,
-            availability_hours: {}
-          });
+          .select('id')
+          .eq('id', user.id)
+          .maybeSingle();
 
-        if (counsellorError) {
-          console.error('Error creating counsellor profile:', counsellorError);
-        } else {
-          console.log('Counsellor profile created successfully');
-          toast({
-            title: "Counsellor profile created!",
-            description: "Your counsellor profile has been created and is now visible to students.",
-          });
+        if (!existingCounsellorProfile) {
+          const { error: counsellorError } = await supabase
+            .from('counsellor_profiles')
+            .insert({
+              id: user.id,
+              specialization: user.user_metadata?.specialization || 'General Counselling',
+              license_number: user.user_metadata?.license_number || '',
+              experience: user.user_metadata?.experience || '',
+              is_verified: false,
+              verification_date: null,
+              bio: user.user_metadata?.bio || null,
+              availability_hours: {}
+            });
+
+          if (counsellorError) {
+            console.error('Error creating counsellor profile:', counsellorError);
+            toast({
+              title: "Counsellor profile creation failed",
+              description: "There was an error creating your counsellor profile. Please contact support.",
+              variant: "destructive",
+            });
+          } else {
+            console.log('Counsellor profile created successfully');
+            toast({
+              title: "Counsellor profile created!",
+              description: "Your counsellor profile has been created and is now visible to students.",
+            });
+          }
         }
       }
 

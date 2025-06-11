@@ -4,25 +4,25 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
 import { 
   Search, 
-  Star, 
-  MapPin, 
-  Clock, 
-  Phone, 
-  Mail, 
   MessageSquare, 
-  Video,
+  Video, 
+  Star, 
+  Clock,
+  Phone,
+  Mail,
+  Award,
+  Filter,
   Users,
   Heart,
-  Filter,
-  CheckCircle
+  Shield,
+  ChevronRight
 } from 'lucide-react';
 
 interface CounsellorData {
@@ -30,17 +30,17 @@ interface CounsellorData {
   first_name: string;
   last_name: string;
   email: string;
-  phone: string | null;
-  bio: string | null;
+  phone: string;
   is_online: boolean;
-  total_sessions: number;
-  completed_sessions: number;
-  counsellor_profiles: {
+  profile_image_url: string;
+  counsellor_profile: {
     specialization: string;
     experience: string;
     is_verified: boolean;
-    bio: string | null;
-  } | null;
+    bio: string;
+  };
+  total_sessions: number;
+  completed_sessions: number;
 }
 
 const Contact = () => {
@@ -51,8 +51,8 @@ const Contact = () => {
   const [loading, setLoading] = useState(true);
   const [creatingSession, setCreatingSession] = useState<string | null>(null);
   const { user } = useAuth();
-  const { toast } = useToast();
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const userType = user?.user_metadata?.user_type || 'student';
 
@@ -76,48 +76,43 @@ const Contact = () => {
           last_name,
           email,
           phone,
-          bio,
           is_online,
+          profile_image_url,
           total_sessions,
           completed_sessions,
-          counsellor_profiles (
+          counsellor_profile:counsellor_profiles(
             specialization,
             experience,
             is_verified,
             bio
           )
         `)
-        .eq('user_type', 'counsellor');
+        .eq('user_type', 'counsellor')
+        .not('counsellor_profile', 'is', null);
+
+      console.log('Counsellors query result:', data, error);
 
       if (error) {
         console.error('Error fetching counsellors:', error);
-        toast({
-          title: "Error loading counsellors",
-          description: "Failed to load counsellor profiles. Please try again.",
-          variant: "destructive",
-        });
-        return;
+        throw error;
       }
 
-      console.log('Fetched counsellors data:', data);
-      
-      // Filter out counsellors without counsellor_profiles
-      const validCounsellors = (data || []).filter(counsellor => counsellor.counsellor_profiles);
-      
+      // Filter out counsellors without counsellor_profile data
+      const validCounsellors = (data || []).filter(counsellor => 
+        counsellor.counsellor_profile && 
+        counsellor.counsellor_profile.length > 0
+      ).map(counsellor => ({
+        ...counsellor,
+        counsellor_profile: counsellor.counsellor_profile[0] // Take the first (should be only) profile
+      }));
+
       console.log('Valid counsellors:', validCounsellors);
       setCounsellors(validCounsellors);
-      
-      if (validCounsellors.length === 0) {
-        toast({
-          title: "No counsellors available",
-          description: "No counsellor profiles are currently available. Please check back later.",
-        });
-      }
     } catch (error) {
-      console.error('Error in fetchCounsellors:', error);
+      console.error('Error fetching counsellors:', error);
       toast({
-        title: "Error",
-        description: "An unexpected error occurred while loading counsellors.",
+        title: "Error loading counsellors",
+        description: "Failed to load counsellor profiles. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -131,27 +126,20 @@ const Contact = () => {
     if (searchTerm) {
       filtered = filtered.filter(counsellor =>
         `${counsellor.first_name} ${counsellor.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        counsellor.counsellor_profiles?.specialization.toLowerCase().includes(searchTerm.toLowerCase())
+        counsellor.counsellor_profile?.specialization?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
     if (selectedSpecialization) {
       filtered = filtered.filter(counsellor =>
-        counsellor.counsellor_profiles?.specialization === selectedSpecialization
+        counsellor.counsellor_profile?.specialization === selectedSpecialization
       );
     }
 
     setFilteredCounsellors(filtered);
   };
 
-  const getSpecializations = () => {
-    const specializations = counsellors
-      .map(c => c.counsellor_profiles?.specialization)
-      .filter((spec, index, array) => spec && array.indexOf(spec) === index);
-    return specializations as string[];
-  };
-
-  const startSession = async (counsellorId: string, type: 'chat' | 'video') => {
+  const handleStartSession = async (counsellorId: string, sessionType: 'chat' | 'video') => {
     if (!user) {
       toast({
         title: "Authentication required",
@@ -161,64 +149,48 @@ const Contact = () => {
       return;
     }
 
-    if (userType !== 'student') {
-      toast({
-        title: "Access denied",
-        description: "Only students can start counselling sessions.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setCreatingSession(counsellorId);
-
+    
     try {
-      const { data, error } = await supabase
+      // Create a new counselling session
+      const { data: session, error } = await supabase
         .from('counselling_sessions')
         .insert({
           student_id: user.id,
           counsellor_id: counsellorId,
-          status: 'pending',
-          scheduled_at: new Date().toISOString()
+          status: 'active',
+          started_at: new Date().toISOString()
         })
         .select()
         .single();
 
-      if (error) {
-        console.error('Error creating session:', error);
-        toast({
-          title: "Session creation failed",
-          description: "Failed to create counselling session. Please try again.",
-          variant: "destructive",
-        });
-        return;
-      }
+      if (error) throw error;
 
       toast({
-        title: "Session created!",
-        description: `Your ${type} session has been scheduled successfully.`,
+        title: "Session started",
+        description: `Your ${sessionType} session has been initiated successfully.`,
       });
 
-      if (type === 'video') {
-        navigate('/video-call');
+      // Navigate to the appropriate session page
+      if (sessionType === 'video') {
+        navigate(`/video-call?session=${session.id}`);
       } else {
-        // Navigate to chat interface when it's available
-        toast({
-          title: "Session pending",
-          description: "Your counsellor will be notified. Please wait for them to join.",
-        });
+        // For chat, you might want to navigate to a chat interface
+        navigate(`/contact?session=${session.id}&type=chat`);
       }
     } catch (error) {
-      console.error('Error in startSession:', error);
+      console.error('Error creating session:', error);
       toast({
-        title: "Error",
-        description: "An unexpected error occurred. Please try again.",
+        title: "Session creation failed",
+        description: "Failed to start the session. Please try again.",
         variant: "destructive",
       });
     } finally {
       setCreatingSession(null);
     }
   };
+
+  const specializations = [...new Set(counsellors.map(c => c.counsellor_profile?.specialization).filter(Boolean))];
 
   if (loading) {
     return (
@@ -229,188 +201,216 @@ const Contact = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <Heart className="h-8 w-8 text-primary" />
-            <h1 className="text-4xl font-bold">
-              {userType === 'student' ? 'Find Your Counsellor' : 'Connect with Students'}
-            </h1>
-          </div>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            {userType === 'student' 
-              ? 'Connect with experienced mental health professionals who understand your journey'
-              : 'Help students on their mental health journey by providing professional support'
-            }
-          </p>
+    <div className="container mx-auto px-4 py-8">
+      {/* Header */}
+      <div className="text-center mb-8">
+        <div className="flex items-center justify-center gap-3 mb-4">
+          <Heart className="h-8 w-8 text-primary" />
+          <h1 className="text-3xl font-bold">
+            {userType === 'student' ? 'Find a Counsellor' : 'Student Connections'}
+          </h1>
         </div>
+        <p className="text-muted-foreground max-w-2xl mx-auto">
+          {userType === 'student' 
+            ? "Connect with professional counsellors who understand your needs and can provide the support you deserve."
+            : "View students who may need your professional guidance and support."
+          }
+        </p>
+      </div>
 
-        {userType === 'student' && (
-          <>
-            {/* Search and Filter */}
-            <div className="mb-8 space-y-4 md:space-y-0 md:flex md:gap-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search by name or specialization..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-              <div className="md:w-64">
-                <select
-                  value={selectedSpecialization}
-                  onChange={(e) => setSelectedSpecialization(e.target.value)}
-                  className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm ring-offset-background"
-                >
-                  <option value="">All Specializations</option>
-                  {getSpecializations().map((spec) => (
-                    <option key={spec} value={spec}>{spec}</option>
-                  ))}
-                </select>
-              </div>
+      {userType === 'student' && (
+        <>
+          {/* Search and Filter */}
+          <div className="flex flex-col md:flex-row gap-4 mb-8">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Input
+                placeholder="Search by name or specialization..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
             </div>
-
-            {/* Counsellors Grid */}
-            {filteredCounsellors.length === 0 ? (
-              <Card className="text-center py-12">
-                <CardContent>
-                  <Users className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold mb-2">No counsellors found</h3>
-                  <p className="text-muted-foreground mb-4">
-                    {searchTerm || selectedSpecialization 
-                      ? 'Try adjusting your search criteria'
-                      : 'No counsellors are currently available. Please check back later.'
-                    }
-                  </p>
-                  {(searchTerm || selectedSpecialization) && (
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        setSearchTerm('');
-                        setSelectedSpecialization('');
-                      }}
-                    >
-                      Clear Filters
-                    </Button>
-                  )}
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredCounsellors.map((counsellor) => (
-                  <Card key={counsellor.id} className="hover:shadow-lg transition-shadow">
-                    <CardHeader className="pb-4">
-                      <div className="flex items-start gap-4">
-                        <div className="relative">
-                          <Avatar className="h-16 w-16">
-                            <AvatarImage src="" />
-                            <AvatarFallback className="text-lg">
-                              {counsellor.first_name[0]}{counsellor.last_name[0]}
-                            </AvatarFallback>
-                          </Avatar>
-                          {counsellor.is_online && (
-                            <div className="absolute -bottom-1 -right-1 h-4 w-4 bg-green-500 rounded-full border-2 border-background"></div>
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h3 className="font-semibold truncate">
-                              Dr. {counsellor.first_name} {counsellor.last_name}
-                            </h3>
-                            {counsellor.counsellor_profiles?.is_verified && (
-                              <CheckCircle className="h-4 w-4 text-blue-500" />
-                            )}
-                          </div>
-                          <Badge variant="secondary" className="text-xs">
-                            {counsellor.counsellor_profiles?.specialization}
-                          </Badge>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Clock className="h-4 w-4" />
-                          <span>{counsellor.counsellor_profiles?.experience} experience</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Star className="h-4 w-4" />
-                          <span>{counsellor.completed_sessions} sessions completed</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm">
-                          <div className={`h-2 w-2 rounded-full ${counsellor.is_online ? 'bg-green-500' : 'bg-gray-400'}`}></div>
-                          <span className={counsellor.is_online ? 'text-green-600' : 'text-muted-foreground'}>
-                            {counsellor.is_online ? 'Online' : 'Offline'}
-                          </span>
-                        </div>
-                      </div>
-
-                      {counsellor.counsellor_profiles?.bio && (
-                        <p className="text-sm text-muted-foreground line-clamp-3">
-                          {counsellor.counsellor_profiles.bio}
-                        </p>
-                      )}
-
-                      <div className="flex gap-2 pt-2">
-                        <Button
-                          size="sm"
-                          className="flex-1"
-                          onClick={() => startSession(counsellor.id, 'chat')}
-                          disabled={creatingSession === counsellor.id}
-                        >
-                          <MessageSquare className="h-4 w-4 mr-2" />
-                          Chat
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="flex-1"
-                          onClick={() => startSession(counsellor.id, 'video')}
-                          disabled={creatingSession === counsellor.id}
-                        >
-                          <Video className="h-4 w-4 mr-2" />
-                          Video
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
+            <div className="flex gap-2">
+              <select
+                value={selectedSpecialization}
+                onChange={(e) => setSelectedSpecialization(e.target.value)}
+                className="px-3 py-2 border border-input bg-background rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                <option value="">All Specializations</option>
+                {specializations.map(spec => (
+                  <option key={spec} value={spec}>{spec}</option>
                 ))}
-              </div>
-            )}
-          </>
-        )}
+              </select>
+              <Button variant="outline" size="sm">
+                <Filter className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
 
-        {/* Emergency Contact */}
-        <Card className="mt-12 bg-gradient-to-r from-red-50 to-red-100 border-red-200">
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <div className="flex items-center justify-center gap-2 mb-4">
-                <Phone className="h-6 w-6 text-red-600" />
-                <h3 className="text-xl font-semibold text-red-900">Emergency Support</h3>
-              </div>
-              <p className="text-red-700 mb-4">
-                If you're experiencing a mental health crisis or having thoughts of self-harm, 
-                please reach out for immediate help.
-              </p>
+          {/* Counsellors Grid */}
+          {filteredCounsellors.length === 0 ? (
+            <Card className="text-center py-12">
+              <CardContent>
+                <Users className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-xl font-semibold mb-2">No counsellors found</h3>
+                <p className="text-muted-foreground mb-4">
+                  {counsellors.length === 0 
+                    ? "No counsellors are currently registered on the platform."
+                    : "Try adjusting your search criteria to find counsellors."
+                  }
+                </p>
+                {counsellors.length === 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    Counsellors need to complete their registration to appear here.
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredCounsellors.map((counsellor) => (
+                <Card key={counsellor.id} className="hover:shadow-lg transition-all duration-300 group">
+                  <CardHeader className="text-center">
+                    <div className="relative mx-auto mb-4">
+                      <Avatar className="h-20 w-20 mx-auto">
+                        <AvatarImage src={counsellor.profile_image_url} />
+                        <AvatarFallback className="text-lg">
+                          {counsellor.first_name?.[0]}{counsellor.last_name?.[0]}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full border-2 border-white ${
+                        counsellor.is_online ? 'bg-green-500' : 'bg-gray-400'
+                      }`}></div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-center gap-2">
+                        <CardTitle className="text-lg">
+                          Dr. {counsellor.first_name} {counsellor.last_name}
+                        </CardTitle>
+                        {counsellor.counsellor_profile?.is_verified && (
+                          <Shield className="h-4 w-4 text-green-600" />
+                        )}
+                      </div>
+                      
+                      <div className="flex items-center justify-center gap-2">
+                        <Badge variant="secondary" className="text-xs">
+                          <Award className="h-3 w-3 mr-1" />
+                          {counsellor.counsellor_profile?.specialization}
+                        </Badge>
+                        <Badge variant={counsellor.is_online ? "default" : "secondary"} className="text-xs">
+                          <div className={`h-2 w-2 rounded-full mr-1 ${
+                            counsellor.is_online ? 'bg-green-400' : 'bg-gray-400'
+                          }`} />
+                          {counsellor.is_online ? 'Online' : 'Offline'}
+                        </Badge>
+                      </div>
+                    </div>
+                  </CardHeader>
+
+                  <CardContent className="space-y-4">
+                    {counsellor.counsellor_profile?.bio && (
+                      <p className="text-sm text-muted-foreground text-center line-clamp-3">
+                        {counsellor.counsellor_profile.bio}
+                      </p>
+                    )}
+
+                    <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-1">
+                        <Clock className="h-4 w-4" />
+                        <span>{counsellor.counsellor_profile?.experience}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Star className="h-4 w-4" />
+                        <span>{counsellor.completed_sessions} sessions</span>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => handleStartSession(counsellor.id, 'chat')}
+                        disabled={creatingSession === counsellor.id}
+                      >
+                        <MessageSquare className="h-4 w-4 mr-2" />
+                        {creatingSession === counsellor.id ? 'Starting...' : 'Chat'}
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => handleStartSession(counsellor.id, 'video')}
+                        disabled={creatingSession === counsellor.id}
+                      >
+                        <Video className="h-4 w-4 mr-2" />
+                        {creatingSession === counsellor.id ? 'Starting...' : 'Video Call'}
+                      </Button>
+                    </div>
+
+                    <div className="pt-2 border-t space-y-2">
+                      {counsellor.email && (
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <Mail className="h-3 w-3" />
+                          <span className="truncate">{counsellor.email}</span>
+                        </div>
+                      )}
+                      {counsellor.phone && (
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <Phone className="h-3 w-3" />
+                          <span>{counsellor.phone}</span>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+
+          {/* Emergency Support */}
+          <Card className="mt-8 bg-red-50 border-red-200">
+            <CardHeader>
+              <CardTitle className="text-red-800 flex items-center gap-2">
+                <Heart className="h-5 w-5" />
+                Need Immediate Help?
+              </CardTitle>
+              <CardDescription className="text-red-700">
+                If you're experiencing a mental health crisis, don't wait for an appointment.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
               <div className="space-y-2">
-                <Button variant="destructive" size="lg" className="w-full md:w-auto">
+                <Button variant="destructive" size="sm" className="w-full md:w-auto">
                   <Phone className="h-4 w-4 mr-2" />
-                  Call 199 - Nigeria Crisis Helpline
+                  Emergency: Call 199 (Nigeria Crisis Helpline)
                 </Button>
                 <p className="text-sm text-red-600">
                   Available 24/7 for immediate mental health crisis support
                 </p>
               </div>
-            </div>
+            </CardContent>
+          </Card>
+        </>
+      )}
+
+      {userType === 'counsellor' && (
+        <Card className="text-center py-12">
+          <CardContent>
+            <Users className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-xl font-semibold mb-2">Student Connection Hub</h3>
+            <p className="text-muted-foreground mb-4">
+              Students will be able to find and connect with you through this platform.
+              Make sure your profile is complete and you're marked as online when available.
+            </p>
+            <Button onClick={() => navigate('/counsellor-profile')}>
+              <ChevronRight className="h-4 w-4 mr-2" />
+              Manage My Profile
+            </Button>
           </CardContent>
         </Card>
-      </div>
+      )}
     </div>
   );
 };
