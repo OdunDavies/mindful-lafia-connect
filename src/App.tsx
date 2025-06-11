@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -19,6 +18,7 @@ import SelfAssessmentPage from "./pages/SelfAssessmentPage";
 import VideoCall from "./pages/VideoCall";
 import NotFound from "./pages/NotFound";
 import Navigation from "@/components/Navigation";
+import Blog from "./pages/Blog";
 
 const queryClient = new QueryClient();
 
@@ -121,34 +121,53 @@ const App = () => (
                 </AuthenticatedLayout>
               </ProtectedRoute>
             } />
+            <Route path="/blog" element={
+              <ProtectedRoute>
+                <AuthenticatedLayout>
+                  <Blog />
+                </AuthenticatedLayout>
+              </ProtectedRoute>
+            } />
             <Route path="/assessment" element={
               <ProtectedRoute>
-                <SelfAssessmentPage />
+                <AuthenticatedLayout>
+                  <SelfAssessmentPage />
+                </AuthenticatedLayout>
               </ProtectedRoute>
             } />
             <Route path="/student-dashboard" element={
               <ProtectedRoute>
-                <StudentDashboard />
+                <AuthenticatedLayout>
+                  <StudentDashboard />
+                </AuthenticatedLayout>
               </ProtectedRoute>
             } />
             <Route path="/counsellor-dashboard" element={
               <ProtectedRoute>
-                <CounsellorDashboard />
+                <AuthenticatedLayout>
+                  <CounsellorDashboard />
+                </AuthenticatedLayout>
               </ProtectedRoute>
             } />
             <Route path="/student-profile" element={
               <ProtectedRoute>
-                <StudentProfile />
+                <AuthenticatedLayout>
+                  <StudentProfile />
+                </AuthenticatedLayout>
               </ProtectedRoute>
             } />
             <Route path="/counsellor-profile" element={
               <ProtectedRoute>
-                <CounsellorProfile />
+                <AuthenticatedLayout>
+                  <CounsellorProfile />
+                </AuthenticatedLayout>
               </ProtectedRoute>
             } />
             <Route path="/video-call" element={
               <ProtectedRoute>
-                <VideoCall />
+                <AuthenticatedLayout>
+                  <VideoCall />
+                </AuthenticatedLayout>
               </ProtectedRoute>
             } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
