@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -10,8 +11,6 @@ import Contact from "./pages/Contact";
 import Resources from "./pages/Resources";
 import SignUp from "./pages/SignUp";
 import SignIn from "./pages/SignIn";
-import StudentDashboard from "./pages/StudentDashboard";
-import CounsellorDashboard from "./pages/CounsellorDashboard";
 import StudentProfile from "./pages/StudentProfile";
 import CounsellorProfile from "./pages/CounsellorProfile";
 import SelfAssessmentPage from "./pages/SelfAssessmentPage";
@@ -54,9 +53,8 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   }
   
   if (user) {
-    // Redirect authenticated users to their dashboard
-    const userType = user.user_metadata?.user_type || 'student';
-    return <Navigate to={userType === 'student' ? '/student-dashboard' : '/counsellor-dashboard'} replace />;
+    // Redirect authenticated users to home page
+    return <Navigate to="/" replace />;
   }
   
   return <>{children}</>;
@@ -132,20 +130,6 @@ const App = () => (
               <ProtectedRoute>
                 <AuthenticatedLayout>
                   <SelfAssessmentPage />
-                </AuthenticatedLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/student-dashboard" element={
-              <ProtectedRoute>
-                <AuthenticatedLayout>
-                  <StudentDashboard />
-                </AuthenticatedLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/counsellor-dashboard" element={
-              <ProtectedRoute>
-                <AuthenticatedLayout>
-                  <CounsellorDashboard />
                 </AuthenticatedLayout>
               </ProtectedRoute>
             } />

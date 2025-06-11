@@ -34,7 +34,7 @@ const SignIn = () => {
 
     if (!error) {
       setTimeout(() => {
-        navigate(userType === 'student' ? '/student-dashboard' : '/counsellor-dashboard');
+        navigate('/');
       }, 1500);
     }
   };
@@ -135,7 +135,7 @@ const SignIn = () => {
                 If you're experiencing a mental health crisis, don't wait to sign in.
               </p>
               <Button variant="destructive" size="sm" className="w-full">
-                Emergency Support - Call 988
+                Emergency Support - Call 199 (Nigeria Crisis Helpline)
               </Button>
             </div>
           </CardContent>

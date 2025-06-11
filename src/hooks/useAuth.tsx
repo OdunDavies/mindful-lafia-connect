@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -29,7 +30,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(session?.user ?? null);
         setLoading(false);
         
-        // Create profile if user signs up
+        // Create profile if user signs up or signs in for the first time
         if (event === 'SIGNED_IN' && session?.user) {
           setTimeout(async () => {
             await ensureUserProfile(session.user);
@@ -51,12 +52,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const ensureUserProfile = async (user: User) => {
     try {
-      console.log('Ensuring profile for user:', user.id);
+      console.log('Ensuring profile for user:', user.id, user.user_metadata);
       
       // Check if profile already exists
       const { data: existingProfile, error: fetchError } = await supabase
         .from('profiles')
-        .select('id')
+        .select('id, user_type')
         .eq('id', user.id)
         .maybeSingle();
 
@@ -66,12 +67,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (existingProfile) {
-        console.log('Profile already exists');
+        console.log('Profile already exists for user type:', existingProfile.user_type);
         return;
       }
 
       // Create main profile
       const userType = user.user_metadata?.user_type || 'student';
+      console.log('Creating new profile for user type:', userType);
+      
       const { error: profileError } = await supabase
         .from('profiles')
         .insert({
@@ -83,7 +86,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           phone: user.user_metadata?.phone || null,
           bio: null,
           profile_image_url: null,
-          is_online: false,
+          is_online: userType === 'counsellor' ? false : null,
           last_seen: new Date().toISOString(),
           total_sessions: 0,
           completed_sessions: 0,
@@ -92,8 +95,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (profileError) {
         console.error('Error creating profile:', profileError);
+        toast({
+          title: "Profile creation failed",
+          description: "There was an error creating your profile. Please try again.",
+          variant: "destructive",
+        });
         return;
       }
+
+      console.log('Main profile created successfully');
 
       // Create specific profile based on user type
       if (userType === 'student') {
@@ -111,6 +121,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (studentError) {
           console.error('Error creating student profile:', studentError);
+        } else {
+          console.log('Student profile created successfully');
         }
       } else if (userType === 'counsellor') {
         const { error: counsellorError } = await supabase
@@ -122,18 +134,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             experience: user.user_metadata?.experience || '',
             is_verified: false,
             verification_date: null,
-            bio: null,
+            bio: user.user_metadata?.bio || null,
             availability_hours: {}
           });
 
         if (counsellorError) {
           console.error('Error creating counsellor profile:', counsellorError);
+        } else {
+          console.log('Counsellor profile created successfully');
+          toast({
+            title: "Counsellor profile created!",
+            description: "Your counsellor profile has been created and is now visible to students.",
+          });
         }
       }
 
-      console.log('Profile created successfully');
+      console.log('Profile creation completed for user:', user.id);
     } catch (error) {
       console.error('Error in ensureUserProfile:', error);
+      toast({
+        title: "Profile setup error",
+        description: "There was an error setting up your profile. Please contact support.",
+        variant: "destructive",
+      });
     }
   };
 

@@ -3,10 +3,12 @@ import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import VideoPlayer from '@/components/VideoPlayer';
 import { 
   Calendar, 
   MessageSquare, 
@@ -19,7 +21,8 @@ import {
   BookOpen,
   ClipboardCheck,
   Star,
-  Activity
+  Activity,
+  Play
 } from 'lucide-react';
 
 const Home = () => {
@@ -36,6 +39,54 @@ const Home = () => {
 
   const userType = user?.user_metadata?.user_type || 'student';
   const firstName = user?.user_metadata?.first_name || 'User';
+
+  // Mental health education videos
+  const mentalHealthVideos = [
+    {
+      videoId: "DQyZ1cuvOPg",
+      title: "Understanding Depression",
+      description: "Learn about depression symptoms, causes, and treatment options available in Nigeria."
+    },
+    {
+      videoId: "rkZl2gsLUp4", 
+      title: "Anxiety Management Techniques",
+      description: "Practical strategies for managing anxiety and stress in daily life."
+    },
+    {
+      videoId: "WPPPFqsECz0",
+      title: "Mental Health Awareness",
+      description: "Breaking the stigma around mental health in African communities."
+    },
+    {
+      videoId: "OIDEGN4rDSo",
+      title: "Coping with Academic Stress",
+      description: "How students can manage academic pressure and maintain mental wellbeing."
+    },
+    {
+      videoId: "8su8hb8U9Ps",
+      title: "Building Resilience",
+      description: "Developing emotional resilience and positive coping mechanisms."
+    }
+  ];
+
+  // Student testimonials
+  const studentTestimonials = [
+    {
+      videoId: "yQq1-_ujXnM",
+      title: "Sarah's Recovery Journey",
+      description: "A student shares her experience overcoming depression through counselling."
+    },
+    {
+      videoId: "lvv3D_2kIQo",
+      title: "Finding Hope Again", 
+      description: "How professional support helped a student through difficult times."
+    },
+    {
+      videoId: "f56ZQkyOu6A",
+      title: "Breaking the Silence",
+      description: "Students discuss the importance of seeking mental health support."
+    }
+  ];
 
   useEffect(() => {
     if (user) {
@@ -121,10 +172,10 @@ const Home = () => {
     }
   ] : [
     {
-      title: 'My Sessions',
-      description: 'View and manage your counselling sessions',
-      icon: Calendar,
-      path: '/counsellor-dashboard',
+      title: 'Find Students',
+      description: 'Connect with students seeking help',
+      icon: Users,
+      path: '/contact',
       color: 'bg-blue-500'
     },
     {
@@ -187,6 +238,52 @@ const Home = () => {
               </p>
             </div>
           </div>
+        </div>
+
+        {/* Mental Health Education Videos */}
+        <div className="mb-12">
+          <div className="flex items-center gap-3 mb-6">
+            <Play className="h-6 w-6 text-primary" />
+            <h2 className="text-2xl font-bold">Mental Health Education</h2>
+          </div>
+          <Carousel className="w-full">
+            <CarouselContent className="-ml-2 md:-ml-4">
+              {mentalHealthVideos.map((video, index) => (
+                <CarouselItem key={index} className="pl-2 md:pl-4 md:basis-1/2 lg:basis-1/3">
+                  <VideoPlayer
+                    videoId={video.videoId}
+                    title={video.title}
+                    description={video.description}
+                  />
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious />
+            <CarouselNext />
+          </Carousel>
+        </div>
+
+        {/* Student Stories */}
+        <div className="mb-12">
+          <div className="flex items-center gap-3 mb-6">
+            <MessageSquare className="h-6 w-6 text-primary" />
+            <h2 className="text-2xl font-bold">Student Stories</h2>
+          </div>
+          <Carousel className="w-full">
+            <CarouselContent className="-ml-2 md:-ml-4">
+              {studentTestimonials.map((video, index) => (
+                <CarouselItem key={index} className="pl-2 md:pl-4 md:basis-1/2 lg:basis-1/3">
+                  <VideoPlayer
+                    videoId={video.videoId}
+                    title={video.title}
+                    description={video.description}
+                  />
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious />
+            <CarouselNext />
+          </Carousel>
         </div>
 
         {/* Stats Cards */}
@@ -307,7 +404,7 @@ const Home = () => {
                       variant="outline" 
                       size="sm" 
                       className="w-full"
-                      onClick={() => navigate(userType === 'student' ? '/student-dashboard' : '/counsellor-dashboard')}
+                      onClick={() => navigate('/contact')}
                     >
                       View All Sessions
                     </Button>
