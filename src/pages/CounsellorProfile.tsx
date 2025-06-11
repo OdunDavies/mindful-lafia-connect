@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,6 +21,7 @@ interface CounsellorProfileData {
   bio: string;
   profile_image_url: string;
   is_online: boolean;
+  last_seen: string;
   total_sessions: number;
   completed_sessions: number;
   cancelled_sessions: number;
@@ -198,7 +198,7 @@ const CounsellorProfile = () => {
                 <X className="h-4 w-4 mr-2" />
                 Cancel
               </Button>
-              <Button onClick={handleSave} loading={saving} size="sm">
+              <Button onClick={handleSave} disabled={saving} size="sm">
                 <Save className="h-4 w-4 mr-2" />
                 Save Changes
               </Button>

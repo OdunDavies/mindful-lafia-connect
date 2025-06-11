@@ -259,8 +259,7 @@ const SelfAssessment = () => {
           </Button>
           <Button 
             onClick={nextQuestion}
-            disabled={answers[currentQ.id] === undefined}
-            loading={loading}
+            disabled={answers[currentQ.id] === undefined || loading}
           >
             {currentQuestion === questions.length - 1 ? 'Complete Assessment' : 'Next'}
           </Button>
