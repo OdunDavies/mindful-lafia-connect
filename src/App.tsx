@@ -13,8 +13,12 @@ import SignUp from "./pages/SignUp";
 import SignIn from "./pages/SignIn";
 import StudentDashboard from "./pages/StudentDashboard";
 import CounsellorDashboard from "./pages/CounsellorDashboard";
+import StudentProfile from "./pages/StudentProfile";
+import CounsellorProfile from "./pages/CounsellorProfile";
+import SelfAssessmentPage from "./pages/SelfAssessmentPage";
 import VideoCall from "./pages/VideoCall";
 import NotFound from "./pages/NotFound";
+import Navigation from "@/components/Navigation";
 
 const queryClient = new QueryClient();
 
@@ -51,10 +55,21 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   
   if (user) {
     // Redirect authenticated users to their dashboard
-    return <Navigate to="/student-dashboard" replace />;
+    const userType = user.user_metadata?.user_type || 'student';
+    return <Navigate to={userType === 'student' ? '/student-dashboard' : '/counsellor-dashboard'} replace />;
   }
   
   return <>{children}</>;
+};
+
+// Layout component for authenticated pages
+const AuthenticatedLayout = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <>
+      <Navigation />
+      {children}
+    </>
+  );
 };
 
 const App = () => (
@@ -65,10 +80,7 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/resources" element={<Resources />} />
+            {/* Public routes */}
             <Route path="/signup" element={
               <PublicRoute>
                 <SignUp />
@@ -79,6 +91,41 @@ const App = () => (
                 <SignIn />
               </PublicRoute>
             } />
+            
+            {/* Protected routes - all require authentication */}
+            <Route path="/" element={
+              <ProtectedRoute>
+                <AuthenticatedLayout>
+                  <Home />
+                </AuthenticatedLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/about" element={
+              <ProtectedRoute>
+                <AuthenticatedLayout>
+                  <About />
+                </AuthenticatedLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/contact" element={
+              <ProtectedRoute>
+                <AuthenticatedLayout>
+                  <Contact />
+                </AuthenticatedLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/resources" element={
+              <ProtectedRoute>
+                <AuthenticatedLayout>
+                  <Resources />
+                </AuthenticatedLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/assessment" element={
+              <ProtectedRoute>
+                <SelfAssessmentPage />
+              </ProtectedRoute>
+            } />
             <Route path="/student-dashboard" element={
               <ProtectedRoute>
                 <StudentDashboard />
@@ -87,6 +134,16 @@ const App = () => (
             <Route path="/counsellor-dashboard" element={
               <ProtectedRoute>
                 <CounsellorDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/student-profile" element={
+              <ProtectedRoute>
+                <StudentProfile />
+              </ProtectedRoute>
+            } />
+            <Route path="/counsellor-profile" element={
+              <ProtectedRoute>
+                <CounsellorProfile />
               </ProtectedRoute>
             } />
             <Route path="/video-call" element={

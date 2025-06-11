@@ -65,22 +65,34 @@ export type Database = {
       }
       counsellor_profiles: {
         Row: {
+          availability_hours: Json | null
+          bio: string | null
           experience: string
           id: string
+          is_verified: boolean | null
           license_number: string
           specialization: string
+          verification_date: string | null
         }
         Insert: {
+          availability_hours?: Json | null
+          bio?: string | null
           experience: string
           id: string
+          is_verified?: boolean | null
           license_number: string
           specialization: string
+          verification_date?: string | null
         }
         Update: {
+          availability_hours?: Json | null
+          bio?: string | null
           experience?: string
           id?: string
+          is_verified?: boolean | null
           license_number?: string
           specialization?: string
+          verification_date?: string | null
         }
         Relationships: [
           {
@@ -151,52 +163,123 @@ export type Database = {
       }
       profiles: {
         Row: {
+          bio: string | null
+          cancelled_sessions: number | null
+          completed_sessions: number | null
           created_at: string | null
           email: string
           first_name: string
           id: string
+          is_online: boolean | null
           last_name: string
+          last_seen: string | null
           phone: string | null
+          profile_image_url: string | null
+          total_sessions: number | null
           updated_at: string | null
           user_type: string
         }
         Insert: {
+          bio?: string | null
+          cancelled_sessions?: number | null
+          completed_sessions?: number | null
           created_at?: string | null
           email: string
           first_name: string
           id: string
+          is_online?: boolean | null
           last_name: string
+          last_seen?: string | null
           phone?: string | null
+          profile_image_url?: string | null
+          total_sessions?: number | null
           updated_at?: string | null
           user_type: string
         }
         Update: {
+          bio?: string | null
+          cancelled_sessions?: number | null
+          completed_sessions?: number | null
           created_at?: string | null
           email?: string
           first_name?: string
           id?: string
+          is_online?: boolean | null
           last_name?: string
+          last_seen?: string | null
           phone?: string | null
+          profile_image_url?: string | null
+          total_sessions?: number | null
           updated_at?: string | null
           user_type?: string
         }
         Relationships: []
       }
+      self_assessments: {
+        Row: {
+          created_at: string | null
+          id: string
+          recommendations: string | null
+          responses: Json
+          risk_level: string
+          score: number
+          student_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          recommendations?: string | null
+          responses: Json
+          risk_level: string
+          score: number
+          student_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          recommendations?: string | null
+          responses?: Json
+          risk_level?: string
+          score?: number
+          student_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "self_assessments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       student_profiles: {
         Row: {
+          academic_year: string | null
           department: string
+          emergency_contact: string | null
+          emergency_phone: string | null
           id: string
           level: string
           student_id: string
         }
         Insert: {
+          academic_year?: string | null
           department: string
+          emergency_contact?: string | null
+          emergency_phone?: string | null
           id: string
           level: string
           student_id: string
         }
         Update: {
+          academic_year?: string | null
           department?: string
+          emergency_contact?: string | null
+          emergency_phone?: string | null
           id?: string
           level?: string
           student_id?: string
