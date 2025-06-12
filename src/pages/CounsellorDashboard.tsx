@@ -67,11 +67,6 @@ const CounsellorDashboard = () => {
       navigate('/signin');
     } catch (error) {
       console.error('Error signing out:', error);
-      toast({
-        title: "Error",
-        description: "Failed to sign out. Please try again.",
-        variant: "destructive",
-      });
     }
   };
 
