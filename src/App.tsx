@@ -11,8 +11,6 @@ import Contact from "./pages/Contact";
 import Resources from "./pages/Resources";
 import SignUp from "./pages/SignUp";
 import SignIn from "./pages/SignIn";
-import StudentProfile from "./pages/StudentProfile";
-import CounsellorProfile from "./pages/CounsellorProfile";
 import SelfAssessmentPage from "./pages/SelfAssessmentPage";
 import VideoCall from "./pages/VideoCall";
 import NotFound from "./pages/NotFound";
@@ -130,20 +128,6 @@ const App = () => (
               <ProtectedRoute>
                 <AuthenticatedLayout>
                   <SelfAssessmentPage />
-                </AuthenticatedLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/student-profile" element={
-              <ProtectedRoute>
-                <AuthenticatedLayout>
-                  <StudentProfile />
-                </AuthenticatedLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/counsellor-profile" element={
-              <ProtectedRoute>
-                <AuthenticatedLayout>
-                  <CounsellorProfile />
                 </AuthenticatedLayout>
               </ProtectedRoute>
             } />
