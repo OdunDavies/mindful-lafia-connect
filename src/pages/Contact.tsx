@@ -31,23 +31,12 @@ interface CounsellorData {
   last_name: string;
   email: string;
   phone: string;
-  is_online: boolean;
-  profile_image_url: string;
-  counsellor_profile: {
-    specialization: string;
-    experience: string;
-    is_verified: boolean;
-    bio: string;
-  };
-  total_sessions: number;
-  completed_sessions: number;
 }
 
 const Contact = () => {
   const [counsellors, setCounsellors] = useState<CounsellorData[]>([]);
   const [filteredCounsellors, setFilteredCounsellors] = useState<CounsellorData[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedSpecialization, setSelectedSpecialization] = useState('');
   const [loading, setLoading] = useState(true);
   const [creatingSession, setCreatingSession] = useState<string | null>(null);
   const { user } = useAuth();
@@ -62,7 +51,7 @@ const Contact = () => {
 
   useEffect(() => {
     filterCounsellors();
-  }, [counsellors, searchTerm, selectedSpecialization]);
+  }, [counsellors, searchTerm]);
 
   const fetchCounsellors = async () => {
     try {
@@ -70,25 +59,8 @@ const Contact = () => {
       
       const { data, error } = await supabase
         .from('profiles')
-        .select(`
-          id,
-          first_name,
-          last_name,
-          email,
-          phone,
-          is_online,
-          profile_image_url,
-          total_sessions,
-          completed_sessions,
-          counsellor_profile:counsellor_profiles(
-            specialization,
-            experience,
-            is_verified,
-            bio
-          )
-        `)
-        .eq('user_type', 'counsellor')
-        .not('counsellor_profile', 'is', null);
+        .select('id, first_name, last_name, email, phone')
+        .eq('user_type', 'counsellor');
 
       console.log('Counsellors query result:', data, error);
 
@@ -97,18 +69,7 @@ const Contact = () => {
         throw error;
       }
 
-      // Filter out counsellors without counsellor_profile data and transform the data
-      const validCounsellors = (data || []).filter(counsellor => 
-        counsellor.counsellor_profile && 
-        Array.isArray(counsellor.counsellor_profile) &&
-        counsellor.counsellor_profile.length > 0
-      ).map(counsellor => ({
-        ...counsellor,
-        counsellor_profile: counsellor.counsellor_profile[0] // Take the first (should be only) profile
-      }));
-
-      console.log('Valid counsellors:', validCounsellors);
-      setCounsellors(validCounsellors);
+      setCounsellors(data || []);
     } catch (error) {
       console.error('Error fetching counsellors:', error);
       toast({
@@ -126,14 +87,7 @@ const Contact = () => {
 
     if (searchTerm) {
       filtered = filtered.filter(counsellor =>
-        `${counsellor.first_name} ${counsellor.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        counsellor.counsellor_profile?.specialization?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    if (selectedSpecialization) {
-      filtered = filtered.filter(counsellor =>
-        counsellor.counsellor_profile?.specialization === selectedSpecialization
+        `${counsellor.first_name} ${counsellor.last_name}`.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -191,8 +145,6 @@ const Contact = () => {
     }
   };
 
-  const specializations = [...new Set(counsellors.map(c => c.counsellor_profile?.specialization).filter(Boolean))];
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -221,32 +173,20 @@ const Contact = () => {
 
       {userType === 'student' && (
         <>
-          {/* Search and Filter */}
+          {/* Search */}
           <div className="flex flex-col md:flex-row gap-4 mb-8">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
-                placeholder="Search by name or specialization..."
+                placeholder="Search by name..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
               />
             </div>
-            <div className="flex gap-2">
-              <select
-                value={selectedSpecialization}
-                onChange={(e) => setSelectedSpecialization(e.target.value)}
-                className="px-3 py-2 border border-input bg-background rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-              >
-                <option value="">All Specializations</option>
-                {specializations.map(spec => (
-                  <option key={spec} value={spec}>{spec}</option>
-                ))}
-              </select>
-              <Button variant="outline" size="sm">
-                <Filter className="h-4 w-4" />
-              </Button>
-            </div>
+            <Button variant="outline" size="sm">
+              <Filter className="h-4 w-4" />
+            </Button>
           </div>
 
           {/* Counsellors Grid */}
@@ -261,11 +201,6 @@ const Contact = () => {
                     : "Try adjusting your search criteria to find counsellors."
                   }
                 </p>
-                {counsellors.length === 0 && (
-                  <p className="text-sm text-muted-foreground">
-                    Counsellors need to complete their registration to appear here.
-                  </p>
-                )}
               </CardContent>
             </Card>
           ) : (
@@ -275,14 +210,10 @@ const Contact = () => {
                   <CardHeader className="text-center">
                     <div className="relative mx-auto mb-4">
                       <Avatar className="h-20 w-20 mx-auto">
-                        <AvatarImage src={counsellor.profile_image_url} />
                         <AvatarFallback className="text-lg">
                           {counsellor.first_name?.[0]}{counsellor.last_name?.[0]}
                         </AvatarFallback>
                       </Avatar>
-                      <div className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full border-2 border-white ${
-                        counsellor.is_online ? 'bg-green-500' : 'bg-gray-400'
-                      }`}></div>
                     </div>
                     
                     <div className="space-y-2">
@@ -290,44 +221,17 @@ const Contact = () => {
                         <CardTitle className="text-lg">
                           Dr. {counsellor.first_name} {counsellor.last_name}
                         </CardTitle>
-                        {counsellor.counsellor_profile?.is_verified && (
-                          <Shield className="h-4 w-4 text-green-600" />
-                        )}
+                        <Shield className="h-4 w-4 text-green-600" />
                       </div>
                       
-                      <div className="flex items-center justify-center gap-2">
-                        <Badge variant="secondary" className="text-xs">
-                          <Award className="h-3 w-3 mr-1" />
-                          {counsellor.counsellor_profile?.specialization}
-                        </Badge>
-                        <Badge variant={counsellor.is_online ? "default" : "secondary"} className="text-xs">
-                          <div className={`h-2 w-2 rounded-full mr-1 ${
-                            counsellor.is_online ? 'bg-green-400' : 'bg-gray-400'
-                          }`} />
-                          {counsellor.is_online ? 'Online' : 'Offline'}
-                        </Badge>
-                      </div>
+                      <Badge variant="secondary" className="text-xs">
+                        <Award className="h-3 w-3 mr-1" />
+                        Counsellor
+                      </Badge>
                     </div>
                   </CardHeader>
 
                   <CardContent className="space-y-4">
-                    {counsellor.counsellor_profile?.bio && (
-                      <p className="text-sm text-muted-foreground text-center line-clamp-3">
-                        {counsellor.counsellor_profile.bio}
-                      </p>
-                    )}
-
-                    <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-4 w-4" />
-                        <span>{counsellor.counsellor_profile?.experience}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Star className="h-4 w-4" />
-                        <span>{counsellor.completed_sessions} sessions</span>
-                      </div>
-                    </div>
-
                     <div className="flex gap-2">
                       <Button
                         variant="outline"
@@ -403,11 +307,11 @@ const Contact = () => {
             <h3 className="text-xl font-semibold mb-2">Student Connection Hub</h3>
             <p className="text-muted-foreground mb-4">
               Students will be able to find and connect with you through this platform.
-              Make sure your profile is complete and you're marked as online when available.
+              Your profile is now active and visible to students.
             </p>
-            <Button onClick={() => navigate('/counsellor-profile')}>
+            <Button onClick={() => navigate('/')}>
               <ChevronRight className="h-4 w-4 mr-2" />
-              Manage My Profile
+              Back to Dashboard
             </Button>
           </CardContent>
         </Card>

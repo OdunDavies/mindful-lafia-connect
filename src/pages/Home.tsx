@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -135,19 +134,10 @@ const Home = () => {
 
       if (sessionsError) throw sessionsError;
 
-      // Fetch user profile for stats
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('total_sessions, completed_sessions')
-        .eq('id', user?.id)
-        .single();
-
-      if (profileError) throw profileError;
-
       setRecentSessions(sessions || []);
       setStats({
-        totalSessions: profile?.total_sessions || 0,
-        completedSessions: profile?.completed_sessions || 0,
+        totalSessions: sessions?.length || 0,
+        completedSessions: sessions?.filter(s => s.status === 'completed').length || 0,
         upcomingSessions: sessions?.filter(s => s.status === 'pending' || s.status === 'active').length || 0
       });
     } catch (error) {
@@ -212,10 +202,10 @@ const Home = () => {
       color: 'bg-purple-500'
     },
     {
-      title: 'My Profile',
-      description: 'View and edit your profile',
-      icon: User,
-      path: '/student-profile',
+      title: 'About Platform',
+      description: 'Learn about our counselling platform',
+      icon: Heart,
+      path: '/about',
       color: 'bg-orange-500'
     }
   ] : [
@@ -225,13 +215,6 @@ const Home = () => {
       icon: Users,
       path: '/contact',
       color: 'bg-blue-500'
-    },
-    {
-      title: 'My Profile',
-      description: 'Manage your professional profile',
-      icon: User,
-      path: '/counsellor-profile',
-      color: 'bg-green-500'
     },
     {
       title: 'Resources',
