@@ -97,9 +97,10 @@ const Contact = () => {
         throw error;
       }
 
-      // Filter out counsellors without counsellor_profile data
+      // Filter out counsellors without counsellor_profile data and transform the data
       const validCounsellors = (data || []).filter(counsellor => 
         counsellor.counsellor_profile && 
+        Array.isArray(counsellor.counsellor_profile) &&
         counsellor.counsellor_profile.length > 0
       ).map(counsellor => ({
         ...counsellor,
