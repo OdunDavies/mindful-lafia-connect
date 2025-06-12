@@ -32,7 +32,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         // Create profile if user signs up or signs in for the first time
         if (event === 'SIGNED_IN' && session?.user) {
-          // Use setTimeout to avoid blocking the auth state change
           setTimeout(async () => {
             await ensureUserProfile(session.user);
           }, 100);
@@ -82,14 +81,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             first_name: user.user_metadata?.first_name || '',
             last_name: user.user_metadata?.last_name || '',
             user_type: userType,
-            phone: user.user_metadata?.phone || null,
-            bio: null,
-            profile_image_url: null,
-            is_online: userType === 'counsellor' ? false : null,
-            last_seen: new Date().toISOString(),
-            total_sessions: 0,
-            completed_sessions: 0,
-            cancelled_sessions: 0
+            phone: user.user_metadata?.phone || null
           });
 
         if (profileError) {
@@ -103,74 +95,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         console.log('Main profile created successfully');
-      }
-
-      // Handle specific profile types
-      if (userType === 'student') {
-        // Check if student profile exists
-        const { data: existingStudentProfile } = await supabase
-          .from('student_profiles')
-          .select('id')
-          .eq('id', user.id)
-          .maybeSingle();
-
-        if (!existingStudentProfile) {
-          console.log('Creating student profile');
-          const { error: studentError } = await supabase
-            .from('student_profiles')
-            .insert({
-              id: user.id,
-              student_id: user.user_metadata?.student_id || '',
-              department: user.user_metadata?.department || '',
-              level: user.user_metadata?.level || '',
-              academic_year: user.user_metadata?.academic_year || null,
-              emergency_contact: user.user_metadata?.emergency_contact || null,
-              emergency_phone: user.user_metadata?.emergency_phone || null
-            });
-
-          if (studentError) {
-            console.error('Error creating student profile:', studentError);
-          } else {
-            console.log('Student profile created successfully');
-          }
-        }
-      } else if (userType === 'counsellor') {
-        // Check if counsellor profile exists
-        const { data: existingCounsellorProfile } = await supabase
-          .from('counsellor_profiles')
-          .select('id')
-          .eq('id', user.id)
-          .maybeSingle();
-
-        if (!existingCounsellorProfile) {
-          console.log('Creating counsellor profile');
-          const { error: counsellorError } = await supabase
-            .from('counsellor_profiles')
-            .insert({
-              id: user.id,
-              specialization: user.user_metadata?.specialization || 'General Counselling',
-              license_number: user.user_metadata?.license_number || '',
-              experience: user.user_metadata?.experience || '',
-              is_verified: false,
-              verification_date: null,
-              bio: user.user_metadata?.bio || null,
-              availability_hours: {}
-            });
-
-          if (counsellorError) {
-            console.error('Error creating counsellor profile:', counsellorError);
-            toast({
-              title: "Counsellor profile creation failed",
-              description: "There was an error creating your counsellor profile. Please contact support.",
-              variant: "destructive",
-            });
-          } else {
-            console.log('Counsellor profile created successfully');
-            toast({
-              title: "Counsellor profile created!",
-              description: "Your counsellor profile has been created and is now visible to students.",
-            });
-          }
+        
+        if (userType === 'counsellor') {
+          toast({
+            title: "Profile created!",
+            description: "Your counsellor profile has been created successfully.",
+          });
         }
       }
 
@@ -237,11 +167,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
-    toast({
-      title: "Signed out",
-      description: "You have been signed out successfully.",
-    });
+    const { error } = await supabase.auth.signOut();
+    
+    if (error) {
+      console.error('Sign out error:', error);
+      toast({
+        title: "Sign out failed",
+        description: "There was an error signing out. Please try again.",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Signed out",
+        description: "You have been signed out successfully.",
+      });
+    }
   };
 
   return (
