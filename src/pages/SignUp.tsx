@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -53,34 +52,24 @@ const SignUp = () => {
       last_name: formData.lastName,
       user_type: userType,
       phone: formData.phone,
+      ...(userType === 'student' && {
+        student_id: formData.studentId,
+        department: formData.department,
+        level: formData.level,
+      }),
+      ...(userType === 'counsellor' && {
+        specialization: formData.specialization,
+        license_number: formData.licenseNumber,
+        experience: formData.experience,
+      }),
     };
 
     const { error } = await signUp(formData.email, formData.password, userData);
 
     if (!error) {
-      // Create additional profile data
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (user) {
-        if (userType === 'student') {
-          await supabase.from('student_profiles').insert({
-            id: user.id,
-            student_id: formData.studentId,
-            department: formData.department,
-            level: formData.level,
-          });
-        } else {
-          await supabase.from('counsellor_profiles').insert({
-            id: user.id,
-            specialization: formData.specialization,
-            license_number: formData.licenseNumber,
-            experience: formData.experience,
-          });
-        }
-      }
-
+      // Redirect to sign-in page after successful signup
       setTimeout(() => {
-        navigate(userType === 'student' ? '/student-dashboard' : '/counsellor-dashboard');
+        navigate('/signin');
       }, 2000);
     }
   };

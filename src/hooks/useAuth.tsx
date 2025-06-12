@@ -32,6 +32,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         // Create profile if user signs up or signs in for the first time
         if (event === 'SIGNED_IN' && session?.user) {
+          // Use setTimeout to avoid blocking the auth state change
           setTimeout(async () => {
             await ensureUserProfile(session.user);
           }, 100);
@@ -67,12 +68,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       const userType = user.user_metadata?.user_type || 'student';
-      console.log('User type:', userType);
+      console.log('User type:', userType, 'Existing profile:', existingProfile);
 
+      // Create main profile if it doesn't exist
       if (!existingProfile) {
         console.log('Creating new main profile for user type:', userType);
         
-        // Create main profile
         const { error: profileError } = await supabase
           .from('profiles')
           .insert({
@@ -104,7 +105,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.log('Main profile created successfully');
       }
 
-      // Create specific profile based on user type
+      // Handle specific profile types
       if (userType === 'student') {
         // Check if student profile exists
         const { data: existingStudentProfile } = await supabase
@@ -114,6 +115,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           .maybeSingle();
 
         if (!existingStudentProfile) {
+          console.log('Creating student profile');
           const { error: studentError } = await supabase
             .from('student_profiles')
             .insert({
@@ -141,6 +143,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           .maybeSingle();
 
         if (!existingCounsellorProfile) {
+          console.log('Creating counsellor profile');
           const { error: counsellorError } = await supabase
             .from('counsellor_profiles')
             .insert({

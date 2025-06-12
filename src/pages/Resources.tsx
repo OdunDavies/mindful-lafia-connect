@@ -1,26 +1,26 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { BookOpen, Download, ExternalLink, Heart, Brain, Users, Phone } from 'lucide-react';
+import { BookOpen, Download, Heart, Brain, Users, Phone } from 'lucide-react';
 
 const Resources = () => {
   const mentalHealthResources = [
     {
       title: "Crisis Support",
-      description: "Immediate help for mental health emergencies",
+      description: "Immediate help for mental health emergencies in Nigeria",
       items: [
-        { name: "National Suicide Prevention Lifeline", contact: "988", type: "phone" },
-        { name: "Crisis Text Line", contact: "Text HOME to 741741", type: "text" },
-        { name: "International Association for Suicide Prevention", contact: "https://www.iasp.info/resources/Crisis_Centres/", type: "link" }
+        { name: "Nigeria Mental Health Crisis Line", contact: "199", type: "phone" },
+        { name: "Lagos State Domestic Violence Helpline", contact: "08000333333", type: "phone" },
+        { name: "Mentally Aware Nigeria Initiative", contact: "08093448989", type: "phone" }
       ]
     },
     {
       title: "Mental Health Organizations",
-      description: "Professional organizations providing support and resources",
+      description: "Professional organizations providing support and resources in Nigeria",
       items: [
-        { name: "National Alliance on Mental Illness (NAMI)", contact: "https://www.nami.org", type: "link" },
-        { name: "Mental Health America", contact: "https://www.mhanational.org", type: "link" },
-        { name: "American Psychological Association", contact: "https://www.apa.org", type: "link" }
+        { name: "Association of Psychiatrists in Nigeria", contact: "Professional mental health support", type: "info" },
+        { name: "Mentally Aware Nigeria Initiative (MANI)", contact: "Mental health advocacy and support", type: "info" },
+        { name: "She Writes Woman", contact: "Mental health support for women", type: "info" }
       ]
     }
   ];
@@ -30,30 +30,30 @@ const Resources = () => {
       title: "Mindfulness & Meditation",
       description: "Tools to help manage stress and anxiety",
       resources: [
-        "Headspace - Guided meditation app",
-        "Calm - Sleep and meditation app", 
-        "Insight Timer - Free meditation app",
-        "10% Happier - Meditation for skeptics"
+        "Daily meditation practice - 10 minutes morning routine",
+        "Breathing exercises - 4-7-8 technique for anxiety", 
+        "Progressive muscle relaxation - Full body tension release",
+        "Mindful walking - Connect with nature and reduce stress"
       ]
     },
     {
       title: "Mood Tracking",
-      description: "Apps to monitor your mental health",
+      description: "Methods to monitor your mental health",
       resources: [
-        "Daylio - Micro mood diary",
-        "Moodpath - Depression & anxiety screening",
-        "Sanvello - Anxiety and mood tracking",
-        "eMoods - Bipolar mood tracker"
+        "Daily mood journal - Track emotions and triggers",
+        "Sleep pattern monitoring - Record sleep quality and duration",
+        "Anxiety level tracking - Rate anxiety 1-10 daily",
+        "Gratitude practice - Write 3 things you're grateful for daily"
       ]
     },
     {
       title: "Educational Resources",
       description: "Learn more about mental health",
       resources: [
-        "Mental Health First Aid courses",
-        "Psychology Today articles",
-        "TED Talks on mental health",
-        "Coursera psychology courses"
+        "Understanding depression - Symptoms, causes, and treatment options",
+        "Anxiety management techniques - Practical coping strategies",
+        "Stress reduction methods - Healthy lifestyle changes",
+        "Building resilience - Developing mental strength and adaptability"
       ]
     }
   ];
@@ -61,25 +61,38 @@ const Resources = () => {
   const downloadableResources = [
     {
       title: "Coping Strategies Worksheet",
-      description: "Practical techniques for managing difficult emotions",
-      format: "PDF"
+      description: "Practical techniques for managing difficult emotions in Nigerian context",
+      content: "A comprehensive guide including breathing exercises, grounding techniques, and culturally relevant coping mechanisms."
     },
     {
       title: "Daily Mood Journal Template",
       description: "Track your mental health progress daily",
-      format: "PDF"
+      content: "Simple template to record mood, sleep, activities, and thoughts with space for reflection."
     },
     {
       title: "Breathing Exercises Guide",
       description: "Step-by-step breathing techniques for anxiety relief",
-      format: "PDF"
+      content: "Detailed instructions for various breathing techniques including box breathing and 4-7-8 method."
     },
     {
       title: "Sleep Hygiene Checklist",
       description: "Improve your sleep quality with these tips",
-      format: "PDF"
+      content: "Practical tips for better sleep including bedtime routines and environmental factors."
     }
   ];
+
+  const handleDownload = (resource: any) => {
+    const content = `${resource.title}\n\n${resource.description}\n\n${resource.content}\n\nProvided by FULAFIA Mental Health Services\n2025`;
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${resource.title.replace(/\s+/g, '_')}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -88,7 +101,7 @@ const Resources = () => {
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-4xl font-bold text-foreground mb-4">Mental Health Resources</h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Comprehensive tools, guides, and support resources to help you on your mental health journey
+            Comprehensive tools, guides, and support resources tailored for Nigerian students
           </p>
         </div>
       </div>
@@ -141,8 +154,8 @@ const Resources = () => {
                 <CardContent>
                   <ul className="space-y-2">
                     {tool.resources.map((resource, resourceIndex) => (
-                      <li key={resourceIndex} className="flex items-center gap-2 text-sm">
-                        <ExternalLink className="h-4 w-4 text-muted-foreground" />
+                      <li key={resourceIndex} className="flex items-start gap-2 text-sm">
+                        <span className="h-1.5 w-1.5 bg-primary rounded-full mt-2 flex-shrink-0"></span>
                         {resource}
                       </li>
                     ))}
@@ -167,9 +180,13 @@ const Resources = () => {
                   <CardDescription className="text-sm">{resource.description}</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button variant="outline" className="w-full gap-2">
+                  <Button 
+                    variant="outline" 
+                    className="w-full gap-2"
+                    onClick={() => handleDownload(resource)}
+                  >
                     <Download className="h-4 w-4" />
-                    Download {resource.format}
+                    Download Guide
                   </Button>
                 </CardContent>
               </Card>
@@ -186,30 +203,46 @@ const Resources = () => {
           <div className="grid md:grid-cols-2 gap-8">
             <Card>
               <CardHeader>
-                <CardTitle>Understanding Mental Health</CardTitle>
-                <CardDescription>Learn about common mental health conditions and their symptoms</CardDescription>
+                <CardTitle>Understanding Mental Health in Nigeria</CardTitle>
+                <CardDescription>Learn about common mental health conditions and cultural considerations</CardDescription>
               </CardHeader>
               <CardContent>
-                <ul className="space-y-3 text-sm">
-                  <li>• Anxiety Disorders: Types, symptoms, and management</li>
-                  <li>• Depression: Recognizing signs and seeking help</li>
-                  <li>• Stress Management: Healthy coping mechanisms</li>
-                  <li>• Building Resilience: Developing mental strength</li>
-                </ul>
+                <div className="space-y-4 text-sm">
+                  <div>
+                    <h4 className="font-semibold mb-2">Depression and Anxiety</h4>
+                    <p>Recognizing symptoms, understanding cultural stigma, and finding appropriate help within Nigerian healthcare system.</p>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-2">Academic Stress Management</h4>
+                    <p>Coping with university pressure, exam anxiety, and balancing academic and social life in Nigerian universities.</p>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-2">Building Mental Resilience</h4>
+                    <p>Developing emotional strength using both modern techniques and traditional Nigerian support systems.</p>
+                  </div>
+                </div>
               </CardContent>
             </Card>
             <Card>
               <CardHeader>
                 <CardTitle>Support Systems</CardTitle>
-                <CardDescription>Building and maintaining healthy relationships</CardDescription>
+                <CardDescription>Building and maintaining healthy relationships in Nigerian context</CardDescription>
               </CardHeader>
               <CardContent>
-                <ul className="space-y-3 text-sm">
-                  <li>• Family and Friends: How to communicate your needs</li>
-                  <li>• Professional Help: When and how to seek therapy</li>
-                  <li>• Support Groups: Finding your community</li>
-                  <li>• Self-Advocacy: Speaking up for your mental health</li>
-                </ul>
+                <div className="space-y-4 text-sm">
+                  <div>
+                    <h4 className="font-semibold mb-2">Family Communication</h4>
+                    <p>How to discuss mental health with family members while respecting cultural values and traditions.</p>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-2">Professional Help</h4>
+                    <p>Finding qualified mental health professionals in Nigeria and understanding when to seek help.</p>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-2">Peer Support</h4>
+                    <p>Creating supportive friendships and study groups that promote mental wellbeing.</p>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </div>
