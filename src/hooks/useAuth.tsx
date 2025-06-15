@@ -3,6 +3,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { createUserProfile } from '@/utils/profileUtils';
 
 interface AuthContextType {
   user: User | null;
@@ -22,146 +23,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event, session);
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
         
-        // Create profile if user signs up or signs in for the first time
         if (event === 'SIGNED_IN' && session?.user) {
           setTimeout(async () => {
-            await ensureUserProfile(session.user);
+            await createUserProfile(session.user, toast);
           }, 100);
         }
       }
     );
 
-    // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('Initial session:', session);
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
     });
 
     return () => subscription.unsubscribe();
-  }, []);
-
-  const ensureUserProfile = async (user: User) => {
-    try {
-      console.log('Ensuring profile for user:', user.id, user.user_metadata);
-      
-      // Check if main profile already exists
-      const { data: existingProfile, error: fetchError } = await supabase
-        .from('profiles')
-        .select('id, user_type')
-        .eq('id', user.id)
-        .maybeSingle();
-
-      if (fetchError) {
-        console.error('Error checking existing profile:', fetchError);
-        return;
-      }
-
-      const userType = user.user_metadata?.user_type || 'student';
-      console.log('User type:', userType, 'Existing profile:', existingProfile);
-
-      // Create main profile if it doesn't exist
-      if (!existingProfile) {
-        console.log('Creating new main profile for user type:', userType);
-        
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            id: user.id,
-            email: user.email || '',
-            first_name: user.user_metadata?.first_name || '',
-            last_name: user.user_metadata?.last_name || '',
-            user_type: userType,
-            phone: user.user_metadata?.phone || null
-          });
-
-        if (profileError) {
-          console.error('Error creating main profile:', profileError);
-          toast({
-            title: "Profile creation failed",
-            description: "There was an error creating your profile. Please try again.",
-            variant: "destructive",
-          });
-          return;
-        }
-
-        console.log('Main profile created successfully');
-
-        // Create specific profile based on user type
-        if (userType === 'student') {
-          const { error: studentProfileError } = await supabase
-            .from('student_profiles')
-            .insert({
-              id: user.id,
-              student_id: user.user_metadata?.student_id || '',
-              department: user.user_metadata?.department || '',
-              level: user.user_metadata?.level || '',
-            });
-
-          if (studentProfileError) {
-            console.error('Error creating student profile:', studentProfileError);
-            toast({
-              title: "Student profile creation failed",
-              description: "There was an error creating your student profile.",
-              variant: "destructive",
-            });
-          } else {
-            console.log('Student profile created successfully');
-            toast({
-              title: "Welcome!",
-              description: "Your student profile has been created successfully.",
-            });
-          }
-        } else if (userType === 'counsellor') {
-          const { error: counsellorProfileError } = await supabase
-            .from('counsellor_profiles')
-            .insert({
-              id: user.id,
-              specialization: user.user_metadata?.specialization || '',
-              license_number: user.user_metadata?.license_number || '',
-              experience: user.user_metadata?.experience || '',
-            });
-
-          if (counsellorProfileError) {
-            console.error('Error creating counsellor profile:', counsellorProfileError);
-            toast({
-              title: "Counsellor profile creation failed",
-              description: "There was an error creating your counsellor profile.",
-              variant: "destructive",
-            });
-          } else {
-            console.log('Counsellor profile created successfully');
-            toast({
-              title: "Welcome!",
-              description: "Your counsellor profile has been created successfully.",
-            });
-          }
-        }
-      }
-
-      console.log('Profile creation completed for user:', user.id);
-    } catch (error) {
-      console.error('Error in ensureUserProfile:', error);
-      toast({
-        title: "Profile setup error",
-        description: "There was an error setting up your profile. Please contact support.",
-        variant: "destructive",
-      });
-    }
-  };
+  }, [toast]);
 
   const signUp = async (email: string, password: string, userData: any) => {
-    console.log('Signing up user with data:', userData);
-    
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -172,7 +57,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     if (error) {
-      console.error('Sign up error:', error);
       toast({
         title: "Sign up failed",
         description: error.message,
@@ -214,7 +98,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { error } = await supabase.auth.signOut();
     
     if (error) {
-      console.error('Sign out error:', error);
       toast({
         title: "Sign out failed",
         description: "There was an error signing out. Please try again.",
