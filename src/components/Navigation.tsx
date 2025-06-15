@@ -86,10 +86,13 @@ const Navigation = () => {
 
           {/* Desktop User Menu */}
           <div className="hidden md:flex items-center space-x-4">
-            <span className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-muted-foreground">
+            <Link
+              to="/profile"
+              className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            >
               <User className="h-4 w-4" />
               {firstName}
-            </span>
+            </Link>
             <Button
               variant="ghost"
               size="sm"
@@ -119,7 +122,11 @@ const Navigation = () => {
 
                   {/* Mobile User Info */}
                   <div className="py-6 border-b">
-                    <div className="flex items-center gap-3">
+                    <Link
+                      to="/profile"
+                      onClick={() => setIsOpen(false)}
+                      className="flex items-center gap-3 hover:bg-muted p-2 rounded-md transition-colors"
+                    >
                       <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
                         <User className="h-5 w-5 text-primary" />
                       </div>
@@ -127,7 +134,7 @@ const Navigation = () => {
                         <p className="font-medium">{firstName}</p>
                         <p className="text-sm text-muted-foreground capitalize">{userType}</p>
                       </div>
-                    </div>
+                    </Link>
                   </div>
 
                   {/* Mobile Navigation Links */}
