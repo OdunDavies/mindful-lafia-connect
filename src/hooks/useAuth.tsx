@@ -95,12 +95,56 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         console.log('Main profile created successfully');
-        
-        if (userType === 'counsellor') {
-          toast({
-            title: "Profile created!",
-            description: "Your counsellor profile has been created successfully.",
-          });
+
+        // Create specific profile based on user type
+        if (userType === 'student') {
+          const { error: studentProfileError } = await supabase
+            .from('student_profiles')
+            .insert({
+              id: user.id,
+              student_id: user.user_metadata?.student_id || '',
+              department: user.user_metadata?.department || '',
+              level: user.user_metadata?.level || '',
+            });
+
+          if (studentProfileError) {
+            console.error('Error creating student profile:', studentProfileError);
+            toast({
+              title: "Student profile creation failed",
+              description: "There was an error creating your student profile.",
+              variant: "destructive",
+            });
+          } else {
+            console.log('Student profile created successfully');
+            toast({
+              title: "Welcome!",
+              description: "Your student profile has been created successfully.",
+            });
+          }
+        } else if (userType === 'counsellor') {
+          const { error: counsellorProfileError } = await supabase
+            .from('counsellor_profiles')
+            .insert({
+              id: user.id,
+              specialization: user.user_metadata?.specialization || '',
+              license_number: user.user_metadata?.license_number || '',
+              experience: user.user_metadata?.experience || '',
+            });
+
+          if (counsellorProfileError) {
+            console.error('Error creating counsellor profile:', counsellorProfileError);
+            toast({
+              title: "Counsellor profile creation failed",
+              description: "There was an error creating your counsellor profile.",
+              variant: "destructive",
+            });
+          } else {
+            console.log('Counsellor profile created successfully');
+            toast({
+              title: "Welcome!",
+              description: "Your counsellor profile has been created successfully.",
+            });
+          }
         }
       }
 
