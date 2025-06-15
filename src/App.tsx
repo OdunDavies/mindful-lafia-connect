@@ -23,47 +23,156 @@ import Navigation from "./components/Navigation";
 
 const queryClient = new QueryClient();
 
-// Protected Route Component
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
+// App Routes Component (moved inside AuthProvider)
+function AppRoutes() {
   const { user, loading } = useAuth();
-  
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-  
-  if (!user) {
-    return <Navigate to="/signin" replace />;
-  }
-  
-  return (
-    <>
-      <Navigation />
-      {children}
-    </>
-  );
-}
 
-// Public Route Component (for auth pages)
-function PublicRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
-  
-  if (loading) {
+  // Protected Route Component
+  function ProtectedRoute({ children }: { children: React.ReactNode }) {
+    if (loading) {
+      return (
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+        </div>
+      );
+    }
+    
+    if (!user) {
+      return <Navigate to="/signin" replace />;
+    }
+    
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
-      </div>
+      <>
+        <Navigation />
+        {children}
+      </>
     );
   }
-  
-  if (user) {
-    return <Navigate to="/" replace />;
+
+  // Public Route Component
+  function PublicRoute({ children }: { children: React.ReactNode }) {
+    if (loading) {
+      return (
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+        </div>
+      );
+    }
+    
+    if (user) {
+      return <Navigate to="/" replace />;
+    }
+    
+    return <>{children}</>;
   }
-  
-  return <>{children}</>;
+
+  return (
+    <Routes>
+      {/* Public routes */}
+      <Route path="/index" element={<Index />} />
+      <Route
+        path="/signup"
+        element={
+          <PublicRoute>
+            <SignUp />
+          </PublicRoute>
+        }
+      />
+      <Route
+        path="/signin"
+        element={
+          <PublicRoute>
+            <SignIn />
+          </PublicRoute>
+        }
+      />
+
+      {/* Protected routes */}
+      <Route
+        path="/"
+        element={
+          <ProtectedRoute>
+            <Home />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/about"
+        element={
+          <ProtectedRoute>
+            <About />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/contact"
+        element={
+          <ProtectedRoute>
+            <Contact />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/resources"
+        element={
+          <ProtectedRoute>
+            <Resources />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/blog"
+        element={
+          <ProtectedRoute>
+            <Blog />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/assessment"
+        element={
+          <ProtectedRoute>
+            <SelfAssessmentPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/video-call/:sessionId"
+        element={
+          <ProtectedRoute>
+            <VideoCall />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/student-dashboard"
+        element={
+          <ProtectedRoute>
+            <StudentDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/counsellor-dashboard"
+        element={
+          <ProtectedRoute>
+            <CounsellorDashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* 404 route */}
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
 }
 
 const App = () => (
@@ -73,111 +182,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <Routes>
-            {/* Public routes */}
-            <Route path="/index" element={<Index />} />
-            <Route
-              path="/signup"
-              element={
-                <PublicRoute>
-                  <SignUp />
-                </PublicRoute>
-              }
-            />
-            <Route
-              path="/signin"
-              element={
-                <PublicRoute>
-                  <SignIn />
-                </PublicRoute>
-              }
-            />
-
-            {/* Protected routes */}
-            <Route
-              path="/"
-              element={
-                <ProtectedRoute>
-                  <Home />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/about"
-              element={
-                <ProtectedRoute>
-                  <About />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/contact"
-              element={
-                <ProtectedRoute>
-                  <Contact />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/resources"
-              element={
-                <ProtectedRoute>
-                  <Resources />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/blog"
-              element={
-                <ProtectedRoute>
-                  <Blog />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/profile"
-              element={
-                <ProtectedRoute>
-                  <Profile />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/assessment"
-              element={
-                <ProtectedRoute>
-                  <SelfAssessmentPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/video-call/:sessionId"
-              element={
-                <ProtectedRoute>
-                  <VideoCall />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/student-dashboard"
-              element={
-                <ProtectedRoute>
-                  <StudentDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/counsellor-dashboard"
-              element={
-                <ProtectedRoute>
-                  <CounsellorDashboard />
-                </ProtectedRoute>
-              }
-            />
-
-            {/* 404 route */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <AppRoutes />
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
