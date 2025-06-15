@@ -15,11 +15,7 @@ export const createUserProfile = async (user: User, toast: any) => {
 
     if (fetchError) {
       console.error('Error checking existing profile:', fetchError);
-      toast({
-        title: "Profile check failed",
-        description: "There was an error checking your profile. Please try again.",
-        variant: "destructive",
-      });
+      // Don't show error toast for profile check, just log it
       return;
     }
 
@@ -38,14 +34,15 @@ export const createUserProfile = async (user: User, toast: any) => {
           first_name: user.user_metadata?.first_name || '',
           last_name: user.user_metadata?.last_name || '',
           user_type: userType,
-          phone: user.user_metadata?.phone || null
+          phone: user.user_metadata?.phone || null,
+          email_verified: user.email_confirmed_at ? true : false
         });
 
       if (profileError) {
         console.error('Error creating main profile:', profileError);
         toast({
           title: "Profile creation failed",
-          description: "There was an error creating your profile. Please try again.",
+          description: "There was an error creating your profile. Please try signing in again.",
           variant: "destructive",
         });
         return;
@@ -66,17 +63,9 @@ export const createUserProfile = async (user: User, toast: any) => {
 
         if (studentProfileError) {
           console.error('Error creating student profile:', studentProfileError);
-          toast({
-            title: "Student profile creation failed",
-            description: "There was an error creating your student profile.",
-            variant: "destructive",
-          });
+          // Don't block for student profile errors
         } else {
           console.log('Student profile created successfully');
-          toast({
-            title: "Welcome!",
-            description: "Your student profile has been created successfully.",
-          });
         }
       } else if (userType === 'counsellor') {
         const { error: counsellorProfileError } = await supabase
@@ -90,32 +79,21 @@ export const createUserProfile = async (user: User, toast: any) => {
 
         if (counsellorProfileError) {
           console.error('Error creating counsellor profile:', counsellorProfileError);
-          toast({
-            title: "Counsellor profile creation failed",
-            description: "There was an error creating your counsellor profile.",
-            variant: "destructive",
-          });
+          // Don't block for counsellor profile errors
         } else {
           console.log('Counsellor profile created successfully');
-          toast({
-            title: "Welcome!",
-            description: "Your counsellor profile has been created successfully.",
-          });
         }
       }
+
+      toast({
+        title: "Welcome!",
+        description: "Your profile has been created successfully.",
+      });
     } else {
       console.log('Profile already exists:', existingProfile);
-      toast({
-        title: "Welcome back!",
-        description: "Your profile is ready.",
-      });
     }
   } catch (error) {
     console.error('Error in createUserProfile:', error);
-    toast({
-      title: "Profile setup error",
-      description: "There was an error setting up your profile. Please contact support.",
-      variant: "destructive",
-    });
+    // Don't show error toast to avoid blocking the user experience
   }
 };

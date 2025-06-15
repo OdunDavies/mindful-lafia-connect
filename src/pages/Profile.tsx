@@ -15,8 +15,7 @@ const Profile = () => {
   const [profile, setProfile] = useState<any>(null);
   const [studentProfile, setStudentProfile] = useState<any>(null);
   const [counsellorProfile, setCounsellorProfile] = useState<any>(null);
-
-  const userType = user?.user_metadata?.user_type || profile?.user_type || 'student';
+  const [profileLoading, setProfileLoading] = useState(true);
 
   useEffect(() => {
     if (user) {
@@ -28,31 +27,51 @@ const Profile = () => {
     if (!user) return;
 
     console.log('Fetching profile for user:', user.id);
+    setProfileLoading(true);
     
     try {
-      // Fetch main profile
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .maybeSingle();
+      // Fetch main profile with retry logic
+      let retryCount = 0;
+      let profileData = null;
+      let profileError = null;
 
-      console.log('Profile fetch result:', { profileData, profileError });
+      while (retryCount < 3 && !profileData) {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .maybeSingle();
 
-      if (profileError) {
-        console.error('Profile fetch error:', profileError);
+        profileData = data;
+        profileError = error;
+        
+        if (error) {
+          console.error(`Profile fetch attempt ${retryCount + 1} failed:`, error);
+          retryCount++;
+          if (retryCount < 3) {
+            // Wait before retry
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
+        } else {
+          break;
+        }
+      }
+
+      if (profileError && retryCount >= 3) {
+        console.error('Profile fetch failed after retries:', profileError);
         toast({
           title: "Error loading profile",
-          description: "There was an error loading your profile data.",
+          description: "Unable to load your profile. Please refresh the page.",
           variant: "destructive",
         });
+        setProfileLoading(false);
         return;
       }
       
+      console.log('Profile fetch result:', profileData);
       setProfile(profileData);
 
       if (profileData) {
-        // Fetch type-specific profile based on the profile data
         const actualUserType = profileData.user_type;
         
         if (actualUserType === 'student') {
@@ -63,10 +82,10 @@ const Profile = () => {
             .eq('id', user.id)
             .maybeSingle();
 
-          console.log('Student profile fetch result:', { studentData, studentError });
-          
           if (!studentError && studentData) {
             setStudentProfile(studentData);
+          } else if (studentError) {
+            console.error('Student profile fetch error:', studentError);
           }
         } else if (actualUserType === 'counsellor') {
           console.log('Fetching counsellor profile...');
@@ -76,12 +95,19 @@ const Profile = () => {
             .eq('id', user.id)
             .maybeSingle();
 
-          console.log('Counsellor profile fetch result:', { counsellorData, counsellorError });
-          
           if (!counsellorError && counsellorData) {
             setCounsellorProfile(counsellorData);
+          } else if (counsellorError) {
+            console.error('Counsellor profile fetch error:', counsellorError);
           }
         }
+      } else {
+        // Profile doesn't exist, create it
+        console.log('No profile found, creating one...');
+        const { createUserProfile } = await import('@/utils/profileUtils');
+        await createUserProfile(user, toast);
+        // Retry fetching after creation
+        setTimeout(() => fetchProfile(), 1000);
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -90,11 +116,13 @@ const Profile = () => {
         description: "There was an error loading your profile data.",
         variant: "destructive",
       });
+    } finally {
+      setProfileLoading(false);
     }
   };
 
   const updateProfile = async (field: string, value: string) => {
-    if (!user) return;
+    if (!user || !profile) return;
 
     setLoading(true);
     try {
@@ -190,7 +218,7 @@ const Profile = () => {
     );
   }
 
-  if (!profile) {
+  if (profileLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
@@ -202,6 +230,18 @@ const Profile = () => {
       </div>
     );
   }
+
+  if (!profile) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-2xl mx-auto text-center">
+          <p>Unable to load profile. Please try refreshing the page.</p>
+        </div>
+      </div>
+    );
+  }
+
+  const userType = profile.user_type;
 
   return (
     <div className="container mx-auto px-4 py-8">

@@ -23,36 +23,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
 
   useEffect(() => {
+    console.log('Setting up auth state listener...');
+    
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('Auth state changed:', event, session?.user?.id);
         setSession(session);
         setUser(session?.user ?? null);
-        setLoading(false);
         
         if (event === 'SIGNED_IN' && session?.user) {
-          // Defer profile creation to avoid blocking auth state change
+          console.log('User signed in, creating profile...');
+          // Defer profile creation slightly to avoid blocking auth state change
           setTimeout(async () => {
-            await createUserProfile(session.user, toast);
-          }, 100);
+            try {
+              await createUserProfile(session.user, toast);
+            } catch (error) {
+              console.error('Error creating profile:', error);
+            }
+          }, 500);
         }
+        
+        setLoading(false);
       }
     );
 
     // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error) {
+        console.error('Error getting session:', error);
+      }
       console.log('Initial session check:', session?.user?.id);
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      console.log('Cleaning up auth subscription...');
+      subscription.unsubscribe();
+    };
   }, [toast]);
 
   const signUp = async (email: string, password: string, userData: any) => {
     try {
+      setLoading(true);
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -85,11 +100,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         variant: "destructive",
       });
       return { error: err };
+    } finally {
+      setLoading(false);
     }
   };
 
   const signIn = async (email: string, password: string) => {
     try {
+      setLoading(true);
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -118,11 +136,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         variant: "destructive",
       });
       return { error: err };
+    } finally {
+      setLoading(false);
     }
   };
 
   const signOut = async () => {
     try {
+      setLoading(true);
       const { error } = await supabase.auth.signOut();
       
       if (error) {
@@ -145,6 +166,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
