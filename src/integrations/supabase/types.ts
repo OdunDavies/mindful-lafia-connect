@@ -124,6 +124,8 @@ export type Database = {
         Row: {
           created_at: string | null
           email: string
+          email_configuration: Json | null
+          email_verified: boolean
           first_name: string
           id: string
           last_name: string
@@ -134,6 +136,8 @@ export type Database = {
         Insert: {
           created_at?: string | null
           email: string
+          email_configuration?: Json | null
+          email_verified?: boolean
           first_name: string
           id: string
           last_name: string
@@ -144,6 +148,8 @@ export type Database = {
         Update: {
           created_at?: string | null
           email?: string
+          email_configuration?: Json | null
+          email_verified?: boolean
           first_name?: string
           id?: string
           last_name?: string
