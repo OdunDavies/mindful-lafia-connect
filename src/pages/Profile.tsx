@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -17,7 +16,7 @@ const Profile = () => {
   const [studentProfile, setStudentProfile] = useState<any>(null);
   const [counsellorProfile, setCounsellorProfile] = useState<any>(null);
 
-  const userType = user?.user_metadata?.user_type || 'student';
+  const userType = user?.user_metadata?.user_type || profile?.user_type || 'student';
 
   useEffect(() => {
     if (user) {
@@ -42,37 +41,46 @@ const Profile = () => {
 
       if (profileError) {
         console.error('Profile fetch error:', profileError);
-        throw profileError;
+        toast({
+          title: "Error loading profile",
+          description: "There was an error loading your profile data.",
+          variant: "destructive",
+        });
+        return;
       }
       
       setProfile(profileData);
 
-      // Fetch type-specific profile
-      if (userType === 'student') {
-        console.log('Fetching student profile...');
-        const { data: studentData, error: studentError } = await supabase
-          .from('student_profiles')
-          .select('*')
-          .eq('id', user.id)
-          .maybeSingle();
-
-        console.log('Student profile fetch result:', { studentData, studentError });
+      if (profileData) {
+        // Fetch type-specific profile based on the profile data
+        const actualUserType = profileData.user_type;
         
-        if (!studentError && studentData) {
-          setStudentProfile(studentData);
-        }
-      } else if (userType === 'counsellor') {
-        console.log('Fetching counsellor profile...');
-        const { data: counsellorData, error: counsellorError } = await supabase
-          .from('counsellor_profiles')
-          .select('*')
-          .eq('id', user.id)
-          .maybeSingle();
+        if (actualUserType === 'student') {
+          console.log('Fetching student profile...');
+          const { data: studentData, error: studentError } = await supabase
+            .from('student_profiles')
+            .select('*')
+            .eq('id', user.id)
+            .maybeSingle();
 
-        console.log('Counsellor profile fetch result:', { counsellorData, counsellorError });
-        
-        if (!counsellorError && counsellorData) {
-          setCounsellorProfile(counsellorData);
+          console.log('Student profile fetch result:', { studentData, studentError });
+          
+          if (!studentError && studentData) {
+            setStudentProfile(studentData);
+          }
+        } else if (actualUserType === 'counsellor') {
+          console.log('Fetching counsellor profile...');
+          const { data: counsellorData, error: counsellorError } = await supabase
+            .from('counsellor_profiles')
+            .select('*')
+            .eq('id', user.id)
+            .maybeSingle();
+
+          console.log('Counsellor profile fetch result:', { counsellorData, counsellorError });
+          
+          if (!counsellorError && counsellorData) {
+            setCounsellorProfile(counsellorData);
+          }
         }
       }
     } catch (error) {

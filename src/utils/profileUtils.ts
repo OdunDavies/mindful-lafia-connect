@@ -15,6 +15,11 @@ export const createUserProfile = async (user: User, toast: any) => {
 
     if (fetchError) {
       console.error('Error checking existing profile:', fetchError);
+      toast({
+        title: "Profile check failed",
+        description: "There was an error checking your profile. Please try again.",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -100,6 +105,10 @@ export const createUserProfile = async (user: User, toast: any) => {
       }
     } else {
       console.log('Profile already exists:', existingProfile);
+      toast({
+        title: "Welcome back!",
+        description: "Your profile is ready.",
+      });
     }
   } catch (error) {
     console.error('Error in createUserProfile:', error);
