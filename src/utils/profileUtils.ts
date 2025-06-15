@@ -4,6 +4,9 @@ import { supabase } from '@/integrations/supabase/client';
 
 export const createUserProfile = async (user: User, toast: any) => {
   try {
+    console.log('Creating profile for user:', user.id, user.user_metadata);
+    
+    // Check if profile already exists
     const { data: existingProfile, error: fetchError } = await supabase
       .from('profiles')
       .select('id, user_type')
@@ -16,8 +19,12 @@ export const createUserProfile = async (user: User, toast: any) => {
     }
 
     const userType = user.user_metadata?.user_type || 'student';
+    console.log('User type:', userType);
 
     if (!existingProfile) {
+      console.log('No existing profile found, creating new one...');
+      
+      // Create main profile
       const { error: profileError } = await supabase
         .from('profiles')
         .insert({
@@ -39,6 +46,9 @@ export const createUserProfile = async (user: User, toast: any) => {
         return;
       }
 
+      console.log('Main profile created successfully');
+
+      // Create type-specific profile
       if (userType === 'student') {
         const { error: studentProfileError } = await supabase
           .from('student_profiles')
@@ -57,6 +67,7 @@ export const createUserProfile = async (user: User, toast: any) => {
             variant: "destructive",
           });
         } else {
+          console.log('Student profile created successfully');
           toast({
             title: "Welcome!",
             description: "Your student profile has been created successfully.",
@@ -80,12 +91,15 @@ export const createUserProfile = async (user: User, toast: any) => {
             variant: "destructive",
           });
         } else {
+          console.log('Counsellor profile created successfully');
           toast({
             title: "Welcome!",
             description: "Your counsellor profile has been created successfully.",
           });
         }
       }
+    } else {
+      console.log('Profile already exists:', existingProfile);
     }
   } catch (error) {
     console.error('Error in createUserProfile:', error);

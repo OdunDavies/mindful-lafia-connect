@@ -20,43 +20,68 @@ const Profile = () => {
   const userType = user?.user_metadata?.user_type || 'student';
 
   useEffect(() => {
-    fetchProfile();
+    if (user) {
+      fetchProfile();
+    }
   }, [user]);
 
   const fetchProfile = async () => {
     if (!user) return;
 
+    console.log('Fetching profile for user:', user.id);
+    
     try {
       // Fetch main profile
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
-      if (profileError) throw profileError;
+      console.log('Profile fetch result:', { profileData, profileError });
+
+      if (profileError) {
+        console.error('Profile fetch error:', profileError);
+        throw profileError;
+      }
+      
       setProfile(profileData);
 
       // Fetch type-specific profile
       if (userType === 'student') {
+        console.log('Fetching student profile...');
         const { data: studentData, error: studentError } = await supabase
           .from('student_profiles')
           .select('*')
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
 
-        if (!studentError) setStudentProfile(studentData);
+        console.log('Student profile fetch result:', { studentData, studentError });
+        
+        if (!studentError && studentData) {
+          setStudentProfile(studentData);
+        }
       } else if (userType === 'counsellor') {
+        console.log('Fetching counsellor profile...');
         const { data: counsellorData, error: counsellorError } = await supabase
           .from('counsellor_profiles')
           .select('*')
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
 
-        if (!counsellorError) setCounsellorProfile(counsellorData);
+        console.log('Counsellor profile fetch result:', { counsellorData, counsellorError });
+        
+        if (!counsellorError && counsellorData) {
+          setCounsellorProfile(counsellorData);
+        }
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
+      toast({
+        title: "Error loading profile",
+        description: "There was an error loading your profile data.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -147,6 +172,16 @@ const Profile = () => {
     }
   };
 
+  if (!user) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-2xl mx-auto text-center">
+          <p>Please sign in to view your profile.</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!profile) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -234,7 +269,7 @@ const Profile = () => {
         </Card>
 
         {/* Student-specific Information */}
-        {userType === 'student' && studentProfile && (
+        {userType === 'student' && (
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -250,7 +285,7 @@ const Profile = () => {
                 <Label htmlFor="studentId">Student ID</Label>
                 <Input
                   id="studentId"
-                  value={studentProfile.student_id || ''}
+                  value={studentProfile?.student_id || ''}
                   onChange={(e) => updateStudentProfile('student_id', e.target.value)}
                   disabled={loading}
                 />
@@ -263,7 +298,7 @@ const Profile = () => {
                 </Label>
                 <Input
                   id="department"
-                  value={studentProfile.department || ''}
+                  value={studentProfile?.department || ''}
                   onChange={(e) => updateStudentProfile('department', e.target.value)}
                   disabled={loading}
                 />
@@ -276,7 +311,7 @@ const Profile = () => {
                 </Label>
                 <Input
                   id="level"
-                  value={studentProfile.level || ''}
+                  value={studentProfile?.level || ''}
                   onChange={(e) => updateStudentProfile('level', e.target.value)}
                   disabled={loading}
                 />
@@ -286,7 +321,7 @@ const Profile = () => {
         )}
 
         {/* Counsellor-specific Information */}
-        {userType === 'counsellor' && counsellorProfile && (
+        {userType === 'counsellor' && (
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -302,7 +337,7 @@ const Profile = () => {
                 <Label htmlFor="specialization">Specialization</Label>
                 <Input
                   id="specialization"
-                  value={counsellorProfile.specialization || ''}
+                  value={counsellorProfile?.specialization || ''}
                   onChange={(e) => updateCounsellorProfile('specialization', e.target.value)}
                   disabled={loading}
                 />
@@ -312,7 +347,7 @@ const Profile = () => {
                 <Label htmlFor="licenseNumber">License Number</Label>
                 <Input
                   id="licenseNumber"
-                  value={counsellorProfile.license_number || ''}
+                  value={counsellorProfile?.license_number || ''}
                   onChange={(e) => updateCounsellorProfile('license_number', e.target.value)}
                   disabled={loading}
                 />
@@ -322,7 +357,7 @@ const Profile = () => {
                 <Label htmlFor="experience">Experience</Label>
                 <Input
                   id="experience"
-                  value={counsellorProfile.experience || ''}
+                  value={counsellorProfile?.experience || ''}
                   onChange={(e) => updateCounsellorProfile('experience', e.target.value)}
                   disabled={loading}
                   placeholder="e.g., 5 years"
