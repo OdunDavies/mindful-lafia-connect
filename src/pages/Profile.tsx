@@ -43,7 +43,6 @@ const Profile = () => {
       if (profileError) {
         console.error('Profile fetch error:', profileError);
         setError('Failed to load profile data');
-        setProfileLoading(false);
         return;
       }
       
@@ -83,7 +82,10 @@ const Profile = () => {
       } else {
         // Profile doesn't exist, try to create it
         console.log('No profile found, attempting to create one...');
-        setError('Profile not found. Please try refreshing or contact support.');
+        const { createUserProfile } = await import('@/utils/profileUtils');
+        await createUserProfile(user, toast);
+        // Retry fetching after creation
+        setTimeout(() => fetchProfile(), 1500);
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
