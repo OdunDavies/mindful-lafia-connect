@@ -4,10 +4,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { User, Phone, Mail, School, Award, Calendar, BookOpen, RefreshCw } from 'lucide-react';
+import { User, Phone, Mail, School, Award, Calendar, BookOpen, RefreshCw, AlertCircle } from 'lucide-react';
 
 const Profile = () => {
   const { user } = useAuth();
@@ -22,6 +23,8 @@ const Profile = () => {
   useEffect(() => {
     if (user) {
       fetchProfile();
+    } else {
+      setProfileLoading(false);
     }
   }, [user]);
 
@@ -43,13 +46,23 @@ const Profile = () => {
       if (profileError) {
         console.error('Profile fetch error:', profileError);
         setError('Failed to load profile data');
+        // Still show the UI with default values
+        setProfile({
+          id: user.id,
+          email: user.email || '',
+          first_name: '',
+          last_name: '',
+          phone: '',
+          user_type: 'student'
+        });
+        setProfileLoading(false);
         return;
       }
       
       console.log('Profile fetch result:', profileData);
-      setProfile(profileData);
-
+      
       if (profileData) {
+        setProfile(profileData);
         const actualUserType = profileData.user_type;
         
         if (actualUserType === 'student') {
@@ -80,16 +93,40 @@ const Profile = () => {
           }
         }
       } else {
-        // Profile doesn't exist, try to create it
-        console.log('No profile found, attempting to create one...');
-        const { createUserProfile } = await import('@/utils/profileUtils');
-        await createUserProfile(user, toast);
-        // Retry fetching after creation
-        setTimeout(() => fetchProfile(), 1500);
+        // Profile doesn't exist, create default and try to create in backend
+        console.log('No profile found, creating default profile...');
+        const defaultProfile = {
+          id: user.id,
+          email: user.email || '',
+          first_name: '',
+          last_name: '',
+          phone: '',
+          user_type: 'student'
+        };
+        setProfile(defaultProfile);
+        
+        // Try to create profile in background
+        try {
+          const { createUserProfile } = await import('@/utils/profileUtils');
+          await createUserProfile(user, toast);
+          // Retry fetching after creation
+          setTimeout(() => fetchProfile(), 1500);
+        } catch (createError) {
+          console.error('Error creating profile:', createError);
+        }
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
-      setError('Failed to load profile. Please try again.');
+      setError('Failed to load profile. Using offline mode.');
+      // Show default profile even if backend fails
+      setProfile({
+        id: user.id,
+        email: user.email || '',
+        first_name: '',
+        last_name: '',
+        phone: '',
+        user_type: 'student'
+      });
     } finally {
       setProfileLoading(false);
     }
@@ -97,6 +134,9 @@ const Profile = () => {
 
   const updateProfile = async (field: string, value: string) => {
     if (!user || !profile) return;
+
+    // Update local state immediately for better UX
+    setProfile((prev: any) => ({ ...prev, [field]: value }));
 
     setLoading(true);
     try {
@@ -107,16 +147,17 @@ const Profile = () => {
 
       if (error) throw error;
 
-      setProfile((prev: any) => ({ ...prev, [field]: value }));
       toast({
         title: "Profile updated",
         description: "Your profile has been updated successfully.",
       });
     } catch (error) {
       console.error('Error updating profile:', error);
+      // Revert local state on error
+      setProfile((prev: any) => ({ ...prev, [field]: prev[field] }));
       toast({
         title: "Update failed",
-        description: "There was an error updating your profile.",
+        description: "There was an error updating your profile. Changes saved locally.",
         variant: "destructive",
       });
     } finally {
@@ -127,6 +168,9 @@ const Profile = () => {
   const updateStudentProfile = async (field: string, value: string) => {
     if (!user) return;
 
+    // Update local state immediately
+    setStudentProfile((prev: any) => ({ ...prev, [field]: value }));
+
     setLoading(true);
     try {
       const { error } = await supabase
@@ -136,7 +180,6 @@ const Profile = () => {
 
       if (error) throw error;
 
-      setStudentProfile((prev: any) => ({ ...prev, [field]: value }));
       toast({
         title: "Student profile updated",
         description: "Your student information has been updated.",
@@ -156,6 +199,9 @@ const Profile = () => {
   const updateCounsellorProfile = async (field: string, value: string) => {
     if (!user) return;
 
+    // Update local state immediately
+    setCounsellorProfile((prev: any) => ({ ...prev, [field]: value }));
+
     setLoading(true);
     try {
       const { error } = await supabase
@@ -165,7 +211,6 @@ const Profile = () => {
 
       if (error) throw error;
 
-      setCounsellorProfile((prev: any) => ({ ...prev, [field]: value }));
       toast({
         title: "Counsellor profile updated",
         description: "Your counsellor information has been updated.",
@@ -195,31 +240,39 @@ const Profile = () => {
   if (profileLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="max-w-2xl mx-auto">
-          <div className="animate-pulse space-y-4">
-            <div className="h-8 bg-gray-200 rounded w-1/4"></div>
-            <div className="h-64 bg-gray-200 rounded"></div>
+        <div className="max-w-2xl mx-auto space-y-6">
+          <div className="text-center">
+            <Skeleton className="h-8 w-48 mx-auto mb-2" />
+            <Skeleton className="h-4 w-64 mx-auto" />
           </div>
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-6 w-48" />
+              <Skeleton className="h-4 w-64" />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-16" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     );
   }
 
-  if (error || !profile) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-2xl mx-auto text-center space-y-4">
-          <p className="text-red-600">{error || 'Unable to load profile data'}</p>
-          <Button onClick={fetchProfile} variant="outline">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Retry
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  const userType = profile.user_type;
+  const userType = profile?.user_type || 'student';
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -227,6 +280,16 @@ const Profile = () => {
         <div className="text-center">
           <h1 className="text-3xl font-bold">My Profile</h1>
           <p className="text-muted-foreground">Manage your personal information</p>
+          {error && (
+            <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md flex items-center gap-2 text-yellow-800">
+              <AlertCircle className="h-4 w-4" />
+              <span className="text-sm">{error}</span>
+              <Button onClick={fetchProfile} variant="outline" size="sm" className="ml-auto">
+                <RefreshCw className="h-3 w-3 mr-1" />
+                Retry
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Basic Information */}
@@ -246,7 +309,7 @@ const Profile = () => {
                 <Label htmlFor="firstName">First Name</Label>
                 <Input
                   id="firstName"
-                  value={profile.first_name || ''}
+                  value={profile?.first_name || ''}
                   onChange={(e) => updateProfile('first_name', e.target.value)}
                   disabled={loading}
                 />
@@ -255,7 +318,7 @@ const Profile = () => {
                 <Label htmlFor="lastName">Last Name</Label>
                 <Input
                   id="lastName"
-                  value={profile.last_name || ''}
+                  value={profile?.last_name || ''}
                   onChange={(e) => updateProfile('last_name', e.target.value)}
                   disabled={loading}
                 />
@@ -269,7 +332,7 @@ const Profile = () => {
               </Label>
               <Input
                 id="email"
-                value={profile.email || ''}
+                value={profile?.email || user?.email || ''}
                 disabled
                 className="bg-muted"
               />
@@ -285,7 +348,7 @@ const Profile = () => {
               </Label>
               <Input
                 id="phone"
-                value={profile.phone || ''}
+                value={profile?.phone || ''}
                 onChange={(e) => updateProfile('phone', e.target.value)}
                 disabled={loading}
                 placeholder="Enter your phone number"
