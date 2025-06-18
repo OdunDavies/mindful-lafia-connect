@@ -25,23 +25,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     console.log('Setting up auth state listener...');
     
-    // Set up auth state listener
+    // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('Auth state changed:', event, session?.user?.id);
         setSession(session);
         setUser(session?.user ?? null);
         
+        // Handle profile creation for signed in users
         if (event === 'SIGNED_IN' && session?.user) {
-          console.log('User signed in, creating profile...');
-          // Defer profile creation slightly to avoid blocking auth state change
+          console.log('User signed in, scheduling profile creation...');
+          // Use setTimeout to avoid blocking the auth state change
           setTimeout(async () => {
             try {
               await createUserProfile(session.user, toast);
             } catch (error) {
               console.error('Error creating profile:', error);
             }
-          }, 500);
+          }, 100);
         }
         
         setLoading(false);
@@ -67,7 +68,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUp = async (email: string, password: string, userData: any) => {
     try {
+      console.log('Starting signup process for:', email);
       setLoading(true);
+      
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -84,14 +87,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           description: error.message,
           variant: "destructive",
         });
+        return { error };
       } else {
-        toast({
-          title: "Sign up successful!",
-          description: "Please check your email to verify your account, then return to sign in.",
-        });
+        console.log('Sign up successful');
+        return { error: null };
       }
-
-      return { error };
     } catch (err) {
       console.error('Unexpected sign up error:', err);
       toast({
@@ -107,7 +107,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     try {
+      console.log('Starting signin process for:', email);
       setLoading(true);
+      
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -120,14 +122,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           description: error.message,
           variant: "destructive",
         });
+        return { error };
       } else {
+        console.log('Sign in successful');
         toast({
           title: "Welcome back!",
           description: "You have been signed in successfully.",
         });
+        return { error: null };
       }
-
-      return { error };
     } catch (err) {
       console.error('Unexpected sign in error:', err);
       toast({

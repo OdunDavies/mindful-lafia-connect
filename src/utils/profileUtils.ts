@@ -15,7 +15,6 @@ export const createUserProfile = async (user: User, toast: any) => {
 
     if (fetchError) {
       console.error('Error checking existing profile:', fetchError);
-      // Don't show error toast for profile check, just log it
       return;
     }
 
@@ -63,7 +62,6 @@ export const createUserProfile = async (user: User, toast: any) => {
 
         if (studentProfileError) {
           console.error('Error creating student profile:', studentProfileError);
-          // Don't block for student profile errors
         } else {
           console.log('Student profile created successfully');
         }
@@ -79,7 +77,6 @@ export const createUserProfile = async (user: User, toast: any) => {
 
         if (counsellorProfileError) {
           console.error('Error creating counsellor profile:', counsellorProfileError);
-          // Don't block for counsellor profile errors
         } else {
           console.log('Counsellor profile created successfully');
         }
@@ -94,6 +91,5 @@ export const createUserProfile = async (user: User, toast: any) => {
     }
   } catch (error) {
     console.error('Error in createUserProfile:', error);
-    // Don't show error toast to avoid blocking the user experience
   }
 };
