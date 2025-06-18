@@ -3,10 +3,11 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { User, Phone, Mail, School, Award, Calendar, BookOpen } from 'lucide-react';
+import { User, Phone, Mail, School, Award, Calendar, BookOpen, RefreshCw } from 'lucide-react';
 
 const Profile = () => {
   const { user } = useAuth();
@@ -16,6 +17,7 @@ const Profile = () => {
   const [studentProfile, setStudentProfile] = useState<any>(null);
   const [counsellorProfile, setCounsellorProfile] = useState<any>(null);
   const [profileLoading, setProfileLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -28,42 +30,19 @@ const Profile = () => {
 
     console.log('Fetching profile for user:', user.id);
     setProfileLoading(true);
+    setError(null);
     
     try {
-      // Fetch main profile with retry logic
-      let retryCount = 0;
-      let profileData = null;
-      let profileError = null;
+      // Fetch main profile
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .maybeSingle();
 
-      while (retryCount < 3 && !profileData) {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .maybeSingle();
-
-        profileData = data;
-        profileError = error;
-        
-        if (error) {
-          console.error(`Profile fetch attempt ${retryCount + 1} failed:`, error);
-          retryCount++;
-          if (retryCount < 3) {
-            // Wait before retry
-            await new Promise(resolve => setTimeout(resolve, 1000));
-          }
-        } else {
-          break;
-        }
-      }
-
-      if (profileError && retryCount >= 3) {
-        console.error('Profile fetch failed after retries:', profileError);
-        toast({
-          title: "Error loading profile",
-          description: "Unable to load your profile. Please refresh the page.",
-          variant: "destructive",
-        });
+      if (profileError) {
+        console.error('Profile fetch error:', profileError);
+        setError('Failed to load profile data');
         setProfileLoading(false);
         return;
       }
@@ -102,20 +81,13 @@ const Profile = () => {
           }
         }
       } else {
-        // Profile doesn't exist, create it
-        console.log('No profile found, creating one...');
-        const { createUserProfile } = await import('@/utils/profileUtils');
-        await createUserProfile(user, toast);
-        // Retry fetching after creation
-        setTimeout(() => fetchProfile(), 1000);
+        // Profile doesn't exist, try to create it
+        console.log('No profile found, attempting to create one...');
+        setError('Profile not found. Please try refreshing or contact support.');
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
-      toast({
-        title: "Error loading profile",
-        description: "There was an error loading your profile data.",
-        variant: "destructive",
-      });
+      setError('Failed to load profile. Please try again.');
     } finally {
       setProfileLoading(false);
     }
@@ -231,11 +203,15 @@ const Profile = () => {
     );
   }
 
-  if (!profile) {
+  if (error || !profile) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="max-w-2xl mx-auto text-center">
-          <p>Unable to load profile. Please try refreshing the page.</p>
+        <div className="max-w-2xl mx-auto text-center space-y-4">
+          <p className="text-red-600">{error || 'Unable to load profile data'}</p>
+          <Button onClick={fetchProfile} variant="outline">
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Retry
+          </Button>
         </div>
       </div>
     );
