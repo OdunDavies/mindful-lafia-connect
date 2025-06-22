@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { MessageSquare, Video, Mail, Phone, Award, Shield } from 'lucide-react';
+import { MessageSquare, Video, Mail, Phone, Award, Shield, Circle } from 'lucide-react';
 
 interface CounsellorData {
   id: string;
@@ -12,6 +12,12 @@ interface CounsellorData {
   last_name: string;
   email: string;
   phone: string;
+  user_type: string;
+  // Metadata fields for counsellors
+  specialization?: string;
+  license_number?: string;
+  experience?: string;
+  last_seen?: string;
 }
 
 interface CounsellorCardProps {
@@ -21,6 +27,10 @@ interface CounsellorCardProps {
 }
 
 const CounsellorCard = ({ counsellor, onStartSession, isCreatingSession }: CounsellorCardProps) => {
+  // Determine online status based on last_seen (within last 5 minutes = online)
+  const isOnline = counsellor.last_seen ? 
+    (new Date().getTime() - new Date(counsellor.last_seen).getTime()) < 5 * 60 * 1000 : false;
+
   return (
     <Card className="hover:shadow-lg transition-all duration-300 group">
       <CardHeader className="text-center">
@@ -30,6 +40,13 @@ const CounsellorCard = ({ counsellor, onStartSession, isCreatingSession }: Couns
               {counsellor.first_name?.[0]}{counsellor.last_name?.[0]}
             </AvatarFallback>
           </Avatar>
+          <div className="absolute -bottom-1 -right-1">
+            <div className={`w-6 h-6 rounded-full border-2 border-white flex items-center justify-center ${
+              isOnline ? 'bg-green-500' : 'bg-gray-400'
+            }`}>
+              <Circle className="w-3 h-3 fill-current text-white" />
+            </div>
+          </div>
         </div>
         
         <div className="space-y-2">
@@ -40,14 +57,35 @@ const CounsellorCard = ({ counsellor, onStartSession, isCreatingSession }: Couns
             <Shield className="h-4 w-4 text-green-600" />
           </div>
           
-          <Badge variant="secondary" className="text-xs">
-            <Award className="h-3 w-3 mr-1" />
-            Counsellor
-          </Badge>
+          <div className="flex flex-col items-center gap-1">
+            <Badge variant="secondary" className="text-xs">
+              <Award className="h-3 w-3 mr-1" />
+              Counsellor
+            </Badge>
+            <Badge variant={isOnline ? "default" : "outline"} className="text-xs">
+              {isOnline ? 'Online' : 'Offline'}
+            </Badge>
+          </div>
         </div>
       </CardHeader>
 
       <CardContent className="space-y-4">
+        {/* Specialization */}
+        {counsellor.specialization && (
+          <div className="text-center">
+            <div className="text-xs text-muted-foreground mb-1">Specialization</div>
+            <div className="text-sm font-medium">{counsellor.specialization}</div>
+          </div>
+        )}
+
+        {/* Experience */}
+        {counsellor.experience && (
+          <div className="text-center">
+            <div className="text-xs text-muted-foreground mb-1">Experience</div>
+            <div className="text-sm font-medium">{counsellor.experience}</div>
+          </div>
+        )}
+
         <div className="flex gap-2">
           <Button
             variant="outline"
