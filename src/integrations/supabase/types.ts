@@ -63,41 +63,6 @@ export type Database = {
           },
         ]
       }
-      counsellor_profiles: {
-        Row: {
-          created_at: string | null
-          experience: string
-          id: string
-          license_number: string
-          specialization: string
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          experience: string
-          id: string
-          license_number: string
-          specialization: string
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          experience?: string
-          id?: string
-          license_number?: string
-          specialization?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "counsellor_profiles_id_fkey"
-            columns: ["id"]
-            isOneToOne: true
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       Lafia: {
         Row: {
           created_at: string
@@ -230,41 +195,6 @@ export type Database = {
             foreignKeyName: "self_assessments_student_id_fkey"
             columns: ["student_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      student_profiles: {
-        Row: {
-          created_at: string | null
-          department: string
-          id: string
-          level: string
-          student_id: string
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          department: string
-          id: string
-          level: string
-          student_id: string
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          department?: string
-          id?: string
-          level?: string
-          student_id?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "student_profiles_id_fkey"
-            columns: ["id"]
-            isOneToOne: true
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
