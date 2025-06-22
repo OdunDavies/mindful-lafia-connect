@@ -38,6 +38,14 @@ export const useStudents = () => {
         throw profilesError;
       }
 
+      // Get auth users to access metadata
+      const { data: { users }, error: usersError } = await supabase.auth.admin.listUsers();
+      
+      if (usersError) {
+        console.error('Error fetching auth users:', usersError);
+        // Continue without metadata if we can't fetch users
+      }
+
       // Then, get the latest assessment for each student
       const { data: assessmentsData, error: assessmentsError } = await supabase
         .from('self_assessments')
@@ -49,8 +57,12 @@ export const useStudents = () => {
         // Don't throw here, just log - assessments are optional
       }
 
-      // Combine profile data with assessment data
+      // Combine profile data with metadata and assessment data
       const studentsWithAssessments = profilesData?.map(profile => {
+        // Find corresponding auth user for metadata
+        const authUser = users?.find(user => user.id === profile.id);
+        const metadata = authUser?.user_metadata || {};
+
         const latestAssessment = assessmentsData?.find(
           assessment => assessment.student_id === profile.id
         );
@@ -62,10 +74,10 @@ export const useStudents = () => {
           email: profile.email,
           phone: profile.phone,
           user_type: profile.user_type,
-          // Extract metadata from user if available (these would come from auth metadata)
-          student_id: profile.student_id,
-          department: profile.department,
-          level: profile.level,
+          // Extract metadata from auth user
+          student_id: metadata.student_id,
+          department: metadata.department,
+          level: metadata.level,
           // Assessment data
           assessment_score: latestAssessment?.score,
           risk_level: latestAssessment?.risk_level,
