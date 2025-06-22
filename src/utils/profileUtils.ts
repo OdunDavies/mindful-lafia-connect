@@ -24,7 +24,7 @@ export const createUserProfile = async (user: User, toast: any) => {
     if (!existingProfile) {
       console.log('No existing profile found, creating new one...');
       
-      // Create main profile
+      // Create main profile with only essential fields
       const { error: profileError } = await supabase
         .from('profiles')
         .insert({
@@ -47,40 +47,7 @@ export const createUserProfile = async (user: User, toast: any) => {
         return;
       }
 
-      console.log('Main profile created successfully');
-
-      // Create type-specific profile
-      if (userType === 'student') {
-        const { error: studentProfileError } = await supabase
-          .from('student_profiles')
-          .insert({
-            id: user.id,
-            student_id: user.user_metadata?.student_id || '',
-            department: user.user_metadata?.department || '',
-            level: user.user_metadata?.level || '',
-          });
-
-        if (studentProfileError) {
-          console.error('Error creating student profile:', studentProfileError);
-        } else {
-          console.log('Student profile created successfully');
-        }
-      } else if (userType === 'counsellor') {
-        const { error: counsellorProfileError } = await supabase
-          .from('counsellor_profiles')
-          .insert({
-            id: user.id,
-            specialization: user.user_metadata?.specialization || '',
-            license_number: user.user_metadata?.license_number || '',
-            experience: user.user_metadata?.experience || '',
-          });
-
-        if (counsellorProfileError) {
-          console.error('Error creating counsellor profile:', counsellorProfileError);
-        } else {
-          console.log('Counsellor profile created successfully');
-        }
-      }
+      console.log('Profile created successfully');
 
       toast({
         title: "Welcome!",
