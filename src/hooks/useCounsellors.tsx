@@ -35,20 +35,8 @@ export const useCounsellors = () => {
         throw profilesError;
       }
 
-      // Get auth users to access metadata
-      const { data: { users }, error: usersError } = await supabase.auth.admin.listUsers();
-      
-      if (usersError) {
-        console.error('Error fetching auth users:', usersError);
-        // Continue without metadata if we can't fetch users
-      }
-
-      // Map the data to include metadata fields
+      // Map the data - metadata will need to be stored in the profiles table or accessed differently
       const counsellorsWithMetadata = profilesData?.map(profile => {
-        // Find corresponding auth user for metadata
-        const authUser = users?.find(user => user.id === profile.id);
-        const metadata = authUser?.user_metadata || {};
-
         return {
           id: profile.id,
           first_name: profile.first_name,
@@ -56,10 +44,11 @@ export const useCounsellors = () => {
           email: profile.email,
           phone: profile.phone,
           user_type: profile.user_type,
-          // Extract metadata from auth user
-          specialization: metadata.specialization,
-          license_number: metadata.license_number,
-          experience: metadata.experience,
+          // For now, these will be undefined until we have a way to store/access them
+          // In a real implementation, these would be stored in the profiles table or accessed via server-side functions
+          specialization: undefined,
+          license_number: undefined,
+          experience: undefined,
           last_seen: profile.updated_at, // Using updated_at as a proxy for last_seen
         };
       }) || [];
