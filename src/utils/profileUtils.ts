@@ -1,4 +1,3 @@
-
 import { User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -45,6 +44,35 @@ export const createUserProfile = async (user: User, toast: any) => {
           variant: "destructive",
         });
         return;
+      }
+
+      // Create profile metadata with additional information
+      const metadataToInsert: any = {
+        id: user.id,
+        bio: userType === 'student' 
+          ? 'Student seeking mental health support and guidance.'
+          : 'Professional counsellor dedicated to helping students achieve mental wellness.',
+        is_available: userType === 'counsellor' ? true : undefined,
+      };
+
+      // Add user-type specific metadata
+      if (userType === 'student') {
+        metadataToInsert.student_id = user.user_metadata?.student_id || null;
+        metadataToInsert.department = user.user_metadata?.department || null;
+        metadataToInsert.level = user.user_metadata?.level || null;
+      } else if (userType === 'counsellor') {
+        metadataToInsert.specialization = user.user_metadata?.specialization || 'General Counselling';
+        metadataToInsert.license_number = user.user_metadata?.license_number || null;
+        metadataToInsert.experience = user.user_metadata?.experience || null;
+      }
+
+      const { error: metadataError } = await supabase
+        .from('profile_metadata')
+        .insert(metadataToInsert);
+
+      if (metadataError) {
+        console.error('Error creating profile metadata:', metadataError);
+        // Don't fail the whole process for metadata errors
       }
 
       console.log('Profile created successfully');

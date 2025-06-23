@@ -1,10 +1,9 @@
-
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useAuth } from '@/hooks/useAuth';
-import { Heart, Menu, LogOut, User, Home, Users, BookOpen, ClipboardCheck, MessageSquare, Info } from 'lucide-react';
+import { Heart, Menu, LogOut, User, Home, Users, BookOpen, ClipboardCheck, MessageSquare, Info, Video } from 'lucide-react';
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -24,17 +23,19 @@ const Navigation = () => {
   const studentNavItems = [
     { name: 'Home', path: '/', icon: Home },
     { name: 'Find Counsellor', path: '/contact', icon: Users },
+    { name: 'Chat', path: '/chat', icon: MessageSquare },
     { name: 'Self Assessment', path: '/assessment', icon: ClipboardCheck },
     { name: 'Resources', path: '/resources', icon: BookOpen },
-    { name: 'Blog', path: '/blog', icon: MessageSquare },
+    { name: 'Blog', path: '/blog', icon: Video },
     { name: 'About', path: '/about', icon: Info },
   ];
 
   const counsellorNavItems = [
     { name: 'Home', path: '/', icon: Home },
     { name: 'Students', path: '/contact', icon: Users },
+    { name: 'Chat', path: '/chat', icon: MessageSquare },
     { name: 'Resources', path: '/resources', icon: BookOpen },
-    { name: 'Blog', path: '/blog', icon: MessageSquare },
+    { name: 'Blog', path: '/blog', icon: Video },
     { name: 'About', path: '/about', icon: Info },
   ];
 

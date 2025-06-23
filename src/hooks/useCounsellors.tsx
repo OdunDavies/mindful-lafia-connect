@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -13,7 +12,10 @@ interface CounsellorData {
   specialization?: string;
   license_number?: string;
   experience?: string;
+  bio?: string;
+  is_available?: boolean;
   last_seen?: string;
+  profile_image_url?: string;
 }
 
 export const useCounsellors = () => {
@@ -27,7 +29,18 @@ export const useCounsellors = () => {
       
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
-        .select('*')
+        .select(`
+          *,
+          profile_metadata (
+            bio,
+            specialization,
+            license_number,
+            experience,
+            is_available,
+            last_seen,
+            profile_image_url
+          )
+        `)
         .eq('user_type', 'counsellor');
 
       if (profilesError) {
@@ -35,8 +48,9 @@ export const useCounsellors = () => {
         throw profilesError;
       }
 
-      // Map the data - metadata will need to be stored in the profiles table or accessed differently
+      // Map the data with metadata
       const counsellorsWithMetadata = profilesData?.map(profile => {
+        const metadata = profile.profile_metadata?.[0] || {};
         return {
           id: profile.id,
           first_name: profile.first_name,
@@ -44,12 +58,13 @@ export const useCounsellors = () => {
           email: profile.email,
           phone: profile.phone,
           user_type: profile.user_type,
-          // For now, these will be undefined until we have a way to store/access them
-          // In a real implementation, these would be stored in the profiles table or accessed via server-side functions
-          specialization: undefined,
-          license_number: undefined,
-          experience: undefined,
-          last_seen: profile.updated_at, // Using updated_at as a proxy for last_seen
+          specialization: metadata.specialization || 'General Counselling',
+          license_number: metadata.license_number || 'Not specified',
+          experience: metadata.experience || 'Not specified',
+          bio: metadata.bio || 'Professional counsellor dedicated to helping students achieve mental wellness.',
+          is_available: metadata.is_available !== false, // Default to true if not set
+          last_seen: metadata.last_seen || profile.updated_at,
+          profile_image_url: metadata.profile_image_url,
         };
       }) || [];
 

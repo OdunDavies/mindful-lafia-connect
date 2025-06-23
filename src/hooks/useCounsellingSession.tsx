@@ -1,17 +1,18 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { useChatSessions } from '@/hooks/useChatSessions';
 
 export const useCounsellingSession = () => {
   const [creatingSession, setCreatingSession] = useState<string | null>(null);
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { startChatSession } = useChatSessions();
 
-  const handleStartSession = async (counsellorId: string, sessionType: 'chat' | 'video') => {
+  const handleStartSession = async (otherUserId: string, sessionType: 'chat' | 'video') => {
     if (!user) {
       toast({
         title: "Authentication required",
@@ -21,34 +22,40 @@ export const useCounsellingSession = () => {
       return;
     }
 
-    setCreatingSession(counsellorId);
+    setCreatingSession(otherUserId);
     
     try {
-      // Create a new counselling session
-      const { data: session, error } = await supabase
-        .from('counselling_sessions')
-        .insert({
-          student_id: user.id,
-          counsellor_id: counsellorId,
-          status: 'active',
-          started_at: new Date().toISOString()
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      toast({
-        title: "Session started",
-        description: `Your ${sessionType} session has been initiated successfully.`,
-      });
-
-      // Navigate to the appropriate session page
-      if (sessionType === 'video') {
-        navigate(`/video-call?session=${session.id}`);
+      if (sessionType === 'chat') {
+        // Start a chat session
+        const chatSessionId = await startChatSession(otherUserId);
+        if (chatSessionId) {
+          toast({
+            title: "Chat session started",
+            description: "Your chat session has been initiated successfully.",
+          });
+          navigate(`/chat?session=${chatSessionId}`);
+        }
       } else {
-        // For chat, you might want to navigate to a chat interface
-        navigate(`/contact?session=${session.id}&type=chat`);
+        // Create a video counselling session
+        const { data: session, error } = await supabase
+          .from('counselling_sessions')
+          .insert({
+            student_id: user?.user_metadata?.user_type === 'student' ? user.id : otherUserId,
+            counsellor_id: user?.user_metadata?.user_type === 'counsellor' ? user.id : otherUserId,
+            status: 'active',
+            started_at: new Date().toISOString()
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        toast({
+          title: "Video session started",
+          description: "Your video session has been initiated successfully.",
+        });
+
+        navigate(`/video-call?session=${session.id}`);
       }
     } catch (error) {
       console.error('Error creating session:', error);

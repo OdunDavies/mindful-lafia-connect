@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -13,6 +12,9 @@ interface StudentData {
   student_id?: string;
   department?: string;
   level?: string;
+  bio?: string;
+  last_seen?: string;
+  profile_image_url?: string;
   assessment_score?: number;
   risk_level?: string;
   last_assessment_date?: string;
@@ -27,10 +29,20 @@ export const useStudents = () => {
     try {
       console.log('Fetching students...');
       
-      // First, get all student profiles
+      // First, get all student profiles with metadata
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
-        .select('*')
+        .select(`
+          *,
+          profile_metadata (
+            bio,
+            student_id,
+            department,
+            level,
+            last_seen,
+            profile_image_url
+          )
+        `)
         .eq('user_type', 'student');
 
       if (profilesError) {
@@ -51,6 +63,7 @@ export const useStudents = () => {
 
       // Combine profile data with metadata and assessment data
       const studentsWithAssessments = profilesData?.map(profile => {
+        const metadata = profile.profile_metadata?.[0] || {};
         const latestAssessment = assessmentsData?.find(
           assessment => assessment.student_id === profile.id
         );
@@ -62,11 +75,12 @@ export const useStudents = () => {
           email: profile.email,
           phone: profile.phone,
           user_type: profile.user_type,
-          // For now, these will be undefined until we have a way to store/access them
-          // In a real implementation, these would be stored in the profiles table or accessed via server-side functions
-          student_id: undefined,
-          department: undefined,
-          level: undefined,
+          student_id: metadata.student_id || 'Not provided',
+          department: metadata.department || 'Not specified',
+          level: metadata.level || 'Not specified',
+          bio: metadata.bio || 'Student seeking mental health support.',
+          last_seen: metadata.last_seen || profile.updated_at,
+          profile_image_url: metadata.profile_image_url,
           // Assessment data
           assessment_score: latestAssessment?.score,
           risk_level: latestAssessment?.risk_level,
