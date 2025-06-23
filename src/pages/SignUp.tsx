@@ -94,7 +94,7 @@ const SignUp = () => {
             <span>Back to Home</span>
           </Link>
           <div className="flex items-center justify-center space-x-2 mb-4">
-            <Heart className="h-8 w-8 text-white" />
+            <img src="/ful.jpg" className="h-8 w-8 text-white" />
             <h1 className="text-2xl font-bold text-white">FULAFIA Counselling</h1>
           </div>
           <p className="text-white/90">Create your account to access mental health support</p>

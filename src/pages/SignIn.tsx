@@ -48,7 +48,7 @@ const SignIn = () => {
             <span>Back to Home</span>
           </Link>
           <div className="flex items-center justify-center space-x-2 mb-4">
-            <Heart className="h-8 w-8 text-white" />
+            <img src="/ful.jpg" alt="" border-radius="50%" className="h-8 w-8 text-white" />
             <h1 className="text-2xl font-bold text-white">FULAFIA Counselling</h1>
           </div>
           <p className="text-white/90">Sign in to access your account</p>
