@@ -76,7 +76,7 @@ const Navigation = () => {
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
-            <Heart className="h-6 w-6 text-primary" />
+          <img src="/ful.svg" alt="Logo" className="h-6 w-6 rounded-full" />
             <span className="text-xl font-bold">FULAFIA Counselling</span>
           </Link>
 
