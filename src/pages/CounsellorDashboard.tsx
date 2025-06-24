@@ -62,8 +62,12 @@ const CounsellorDashboard = () => {
   };
 
   const handleSignOut = async () => {
-    await signOut();
-    navigate('/');
+    try {
+      await signOut();
+      navigate('/signin');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
   };
 
   const joinSession = (sessionId: string) => {

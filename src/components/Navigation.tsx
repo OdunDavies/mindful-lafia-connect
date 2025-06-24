@@ -1,10 +1,9 @@
-
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useAuth } from '@/hooks/useAuth';
-import { Heart, Menu, LogOut, User, Home, Users, BookOpen, ClipboardCheck, MessageSquare, Info } from 'lucide-react';
+import { Heart, Menu, LogOut, User, Home, Users, BookOpen, ClipboardCheck, MessageSquare, Info, Video } from 'lucide-react';
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -26,7 +25,7 @@ const Navigation = () => {
     { name: 'Find Counsellor', path: '/contact', icon: Users },
     { name: 'Self Assessment', path: '/assessment', icon: ClipboardCheck },
     { name: 'Resources', path: '/resources', icon: BookOpen },
-    { name: 'Blog', path: '/blog', icon: MessageSquare },
+    { name: 'Blog', path: '/blog', icon: Video },
     { name: 'About', path: '/about', icon: Info },
   ];
 
@@ -34,12 +33,11 @@ const Navigation = () => {
     { name: 'Home', path: '/', icon: Home },
     { name: 'Students', path: '/contact', icon: Users },
     { name: 'Resources', path: '/resources', icon: BookOpen },
-    { name: 'Blog', path: '/blog', icon: MessageSquare },
+    { name: 'Blog', path: '/blog', icon: Video },
     { name: 'About', path: '/about', icon: Info },
   ];
 
   const navItems = userType === 'student' ? studentNavItems : counsellorNavItems;
-  const profilePath = userType === 'student' ? '/student-profile' : '/counsellor-profile';
 
   const NavLinks = ({ mobile = false, onItemClick = () => {} }) => (
     <>
@@ -76,7 +74,12 @@ const Navigation = () => {
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
-          <img src="/ful.svg" alt="Logo" className="h-6 w-6 rounded-full" />
+
+            <img
+  src="/ful.jpg"
+  alt="Logo"
+  className="h-6 w-6 rounded-full object-cover"
+/>
             <span className="text-xl font-bold">FULAFIA Counselling</span>
           </Link>
 
@@ -88,7 +91,7 @@ const Navigation = () => {
           {/* Desktop User Menu */}
           <div className="hidden md:flex items-center space-x-4">
             <Link
-              to={profilePath}
+              to="/profile"
               className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
             >
               <User className="h-4 w-4" />
@@ -123,7 +126,11 @@ const Navigation = () => {
 
                   {/* Mobile User Info */}
                   <div className="py-6 border-b">
-                    <div className="flex items-center gap-3">
+                    <Link
+                      to="/profile"
+                      onClick={() => setIsOpen(false)}
+                      className="flex items-center gap-3 hover:bg-muted p-2 rounded-md transition-colors"
+                    >
                       <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
                         <User className="h-5 w-5 text-primary" />
                       </div>
@@ -131,7 +138,7 @@ const Navigation = () => {
                         <p className="font-medium">{firstName}</p>
                         <p className="text-sm text-muted-foreground capitalize">{userType}</p>
                       </div>
-                    </div>
+                    </Link>
                   </div>
 
                   {/* Mobile Navigation Links */}
@@ -141,14 +148,6 @@ const Navigation = () => {
 
                   {/* Mobile Footer */}
                   <div className="border-t pt-6 space-y-2">
-                    <Link
-                      to={profilePath}
-                      onClick={() => setIsOpen(false)}
-                      className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors w-full"
-                    >
-                      <User className="h-4 w-4" />
-                      My Profile
-                    </Link>
                     <Button
                       variant="ghost"
                       size="sm"

@@ -5,12 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Heart, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 const SignIn = () => {
-  const [userType, setUserType] = useState('student');
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -63,21 +61,6 @@ const SignIn = () => {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* User Type Selection */}
-              <div className="space-y-3">
-                <Label className="text-base font-medium text-white">I am a:</Label>
-                <RadioGroup value={userType} onValueChange={setUserType}>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="student" id="student" />
-                    <Label htmlFor="student" className="text-white">Student</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="counsellor" id="counsellor" />
-                    <Label htmlFor="counsellor" className="text-white">Counsellor</Label>
-                  </div>
-                </RadioGroup>
-              </div>
-
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-white">Email Address</Label>
                 <Input
@@ -104,12 +87,6 @@ const SignIn = () => {
                 />
               </div>
 
-              <div className="flex items-center justify-between">
-                <Link to="/forgot-password" className="text-sm text-blue-200 hover:underline">
-                  Forgot your password?
-                </Link>
-              </div>
-
               <Button type="submit" className="w-full bg-white text-primary hover:bg-white/90" size="lg">
                 Sign In
               </Button>
@@ -126,7 +103,6 @@ const SignIn = () => {
           </CardContent>
         </Card>
 
-        {/* Emergency Support */}
         <Card className="mt-6 glass-effect border-red-300/30 bg-red-500/20">
           <CardContent className="pt-6">
             <div className="text-center">
