@@ -152,14 +152,6 @@ function AppRoutes() {
         }
       />
       <Route
-        path="/chat"
-        element={
-          <ProtectedRoute>
-            <ChatPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
         path="/student-dashboard"
         element={
           <ProtectedRoute>
