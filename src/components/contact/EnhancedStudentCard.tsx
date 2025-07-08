@@ -1,11 +1,10 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { GraduationCap, Building, AlertTriangle, Clock, Users } from 'lucide-react';
-import SessionControls from './SessionControls';
+import { GraduationCap, Building, AlertTriangle, Clock, Users, Mail, Phone } from 'lucide-react';
 
 interface EnhancedStudentCardProps {
   student: {
@@ -13,6 +12,7 @@ interface EnhancedStudentCardProps {
     first_name: string;
     last_name: string;
     email: string;
+    phone: string;
     student_id?: string;
     department?: string;
     level?: string;
@@ -30,24 +30,6 @@ interface EnhancedStudentCardProps {
 }
 
 const EnhancedStudentCard = ({ student, onStartSession, isCreatingSession }: EnhancedStudentCardProps) => {
-  const [activeSession, setActiveSession] = useState<string | null>(null);
-  const [isVideoCallActive, setIsVideoCallActive] = useState(false);
-
-  const handleStartSession = () => {
-    onStartSession(student.id);
-    setActiveSession(`session-${student.id}-${Date.now()}`);
-  };
-
-  const handleStartVideoCall = () => {
-    setIsVideoCallActive(!isVideoCallActive);
-    console.log(`${isVideoCallActive ? 'Ending' : 'Starting'} video call with ${student.first_name}`);
-  };
-
-  const handleEndSession = () => {
-    setActiveSession(null);
-    setIsVideoCallActive(false);
-  };
-
   const getRiskBadgeColor = (riskLevel?: string) => {
     switch (riskLevel?.toLowerCase()) {
       case 'high': return 'destructive';
@@ -102,31 +84,29 @@ const EnhancedStudentCard = ({ student, onStartSession, isCreatingSession }: Enh
           </div>
         </div>
 
-        {/* Session Controls or Start Button */}
-        {activeSession ? (
-          <SessionControls
-            sessionId={activeSession}
-            participantId={student.id}
-            participantName={`${student.first_name} ${student.last_name}`}
-            onStartVideoCall={handleStartVideoCall}
-            onEndSession={handleEndSession}
-            isVideoCallActive={isVideoCallActive}
-          />
-        ) : (
-          <div className="space-y-2">
-            <Button
-              onClick={handleStartSession}
-              disabled={isCreatingSession}
-              className="w-full"
-              variant={student.risk_level === 'high' ? 'destructive' : 'default'}
-            >
-              {isCreatingSession ? 'Starting Session...' : 'Start Session'}
-            </Button>
-            <div className="text-xs text-muted-foreground text-center">
-              Contact: {student.email}
-            </div>
+        {/* Contact Information */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 text-sm">
+            <Mail className="h-4 w-4 text-green-500" />
+            <span className="truncate">{student.email}</span>
           </div>
-        )}
+          {student.phone && (
+            <div className="flex items-center gap-2 text-sm">
+              <Phone className="h-4 w-4 text-blue-500" />
+              <span>{student.phone}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Action Button */}
+        <Button
+          onClick={() => onStartSession(student.id)}
+          disabled={isCreatingSession}
+          className="w-full"
+          variant={student.risk_level === 'high' ? 'destructive' : 'default'}
+        >
+          {isCreatingSession ? 'Starting Session...' : 'Start Session'}
+        </Button>
       </CardContent>
     </Card>
   );

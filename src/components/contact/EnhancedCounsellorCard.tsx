@@ -1,11 +1,10 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Video, MessageSquare, Star, Clock, Users } from "lucide-react";
-import SessionControls from "./SessionControls";
+import { Star, Clock, Users, Mail, Phone, Award, Shield } from "lucide-react";
 
 interface EnhancedCounsellorCardProps {
   counsellor: {
@@ -13,6 +12,7 @@ interface EnhancedCounsellorCardProps {
     first_name: string;
     last_name: string;
     email: string;
+    phone: string;
     specialization?: string;
     license_number?: string;
     experience?: string;
@@ -28,26 +28,6 @@ interface EnhancedCounsellorCardProps {
 }
 
 export function EnhancedCounsellorCard({ counsellor, onStartSession, isCreatingSession }: EnhancedCounsellorCardProps) {
-  const [activeSession, setActiveSession] = useState<string | null>(null);
-  const [isVideoCallActive, setIsVideoCallActive] = useState(false);
-
-  const handleStartSession = () => {
-    onStartSession(counsellor.id);
-    // Simulate session creation
-    setActiveSession(`session-${counsellor.id}-${Date.now()}`);
-  };
-
-  const handleStartVideoCall = () => {
-    setIsVideoCallActive(!isVideoCallActive);
-    // Integration point for video calling service
-    console.log(`${isVideoCallActive ? 'Ending' : 'Starting'} video call with ${counsellor.first_name}`);
-  };
-
-  const handleEndSession = () => {
-    setActiveSession(null);
-    setIsVideoCallActive(false);
-  };
-
   return (
     <Card className="hover:shadow-lg transition-all duration-300 group">
       <CardHeader className="text-center">
@@ -70,7 +50,7 @@ export function EnhancedCounsellorCard({ counsellor, onStartSession, isCreatingS
         {/* Professional Details */}
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-sm">
-            <Star className="h-4 w-4 text-yellow-500" />
+            <Award className="h-4 w-4 text-yellow-500" />
             <span>License: {counsellor.license_number || 'Not specified'}</span>
           </div>
           <div className="flex items-center gap-2 text-sm">
@@ -83,30 +63,28 @@ export function EnhancedCounsellorCard({ counsellor, onStartSession, isCreatingS
           </div>
         </div>
 
-        {/* Session Controls or Start Button */}
-        {activeSession ? (
-          <SessionControls
-            sessionId={activeSession}
-            participantId={counsellor.id}
-            participantName={`${counsellor.first_name} ${counsellor.last_name}`}
-            onStartVideoCall={handleStartVideoCall}
-            onEndSession={handleEndSession}
-            isVideoCallActive={isVideoCallActive}
-          />
-        ) : (
-          <div className="space-y-2">
-            <Button
-              onClick={handleStartSession}
-              disabled={isCreatingSession || !counsellor.is_available}
-              className="w-full"
-            >
-              {isCreatingSession ? 'Starting Session...' : 'Start Session'}
-            </Button>
-            <div className="text-xs text-muted-foreground text-center">
-              Contact: {counsellor.email}
-            </div>
+        {/* Contact Information */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 text-sm">
+            <Mail className="h-4 w-4 text-green-500" />
+            <span className="truncate">{counsellor.email}</span>
           </div>
-        )}
+          {counsellor.phone && (
+            <div className="flex items-center gap-2 text-sm">
+              <Phone className="h-4 w-4 text-blue-500" />
+              <span>{counsellor.phone}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Action Button */}
+        <Button
+          onClick={() => onStartSession(counsellor.id)}
+          disabled={isCreatingSession || !counsellor.is_available}
+          className="w-full"
+        >
+          {isCreatingSession ? 'Starting Session...' : 'Start Session'}
+        </Button>
       </CardContent>
     </Card>
   );

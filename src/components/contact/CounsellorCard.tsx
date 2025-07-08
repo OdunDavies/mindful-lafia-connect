@@ -1,9 +1,10 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { MessageSquare, Video, Mail, Phone, Award, Shield, Circle, Star, Clock } from 'lucide-react';
+import { Mail, Phone, Award, Shield, Circle, Star, Clock } from 'lucide-react';
 
 interface CounsellorData {
   id: string;
@@ -23,7 +24,7 @@ interface CounsellorData {
 
 interface CounsellorCardProps {
   counsellor: CounsellorData;
-  onStartSession: (counsellorId: string, sessionType: 'chat' | 'video') => void;
+  onStartSession: (counsellorId: string) => void;
   isCreatingSession: boolean;
 }
 
@@ -84,15 +85,6 @@ const CounsellorCard = ({ counsellor, onStartSession, isCreatingSession }: Couns
       </CardHeader>
 
       <CardContent className="space-y-4">
-        {/* Bio */}
-        {counsellor.bio && (
-          <div className="text-center">
-            <p className="text-xs text-muted-foreground leading-relaxed line-clamp-3">
-              {counsellor.bio}
-            </p>
-          </div>
-        )}
-
         {/* Specialization */}
         {counsellor.specialization && (
           <div className="text-center">
@@ -131,28 +123,14 @@ const CounsellorCard = ({ counsellor, onStartSession, isCreatingSession }: Couns
           </div>
         )}
 
-        {/* Action Buttons */}
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex-1"
-            onClick={() => onStartSession(counsellor.id, 'chat')}
-            disabled={isCreatingSession || (!isOnline || !counsellor.is_available)}
-          >
-            <MessageSquare className="h-4 w-4 mr-2" />
-            {isCreatingSession ? 'Starting...' : 'Chat'}
-          </Button>
-          <Button
-            size="sm"
-            className="flex-1"
-            onClick={() => onStartSession(counsellor.id, 'video')}
-            disabled={isCreatingSession || (!isOnline || !counsellor.is_available)}
-          >
-            <Video className="h-4 w-4 mr-2" />
-            {isCreatingSession ? 'Starting...' : 'Video Call'}
-          </Button>
-        </div>
+        {/* Action Button */}
+        <Button
+          onClick={() => onStartSession(counsellor.id)}
+          disabled={isCreatingSession || (!isOnline || !counsellor.is_available)}
+          className="w-full"
+        >
+          {isCreatingSession ? 'Starting Session...' : 'Start Session'}
+        </Button>
 
         {/* Contact Information */}
         <div className="pt-2 border-t space-y-2">

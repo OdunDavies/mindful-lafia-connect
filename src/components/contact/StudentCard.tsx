@@ -1,9 +1,10 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { MessageSquare, Video, Mail, Phone, GraduationCap, Building, Trophy, AlertTriangle, CheckCircle, Clock, User } from 'lucide-react';
+import { Mail, Phone, GraduationCap, Building, AlertTriangle, CheckCircle, Clock, User } from 'lucide-react';
 
 interface StudentData {
   id: string;
@@ -25,7 +26,7 @@ interface StudentData {
 
 interface StudentCardProps {
   student: StudentData;
-  onStartSession: (studentId: string, sessionType: 'chat' | 'video') => void;
+  onStartSession: (studentId: string) => void;
   isCreatingSession: boolean;
 }
 
@@ -86,15 +87,6 @@ const StudentCard = ({ student, onStartSession, isCreatingSession }: StudentCard
       </CardHeader>
 
       <CardContent className="space-y-4">
-        {/* Bio */}
-        {student.bio && (
-          <div className="text-center">
-            <p className="text-xs text-muted-foreground leading-relaxed line-clamp-3">
-              {student.bio}
-            </p>
-          </div>
-        )}
-
         {/* Student Information */}
         <div className="grid grid-cols-2 gap-2 text-sm">
           {student.student_id && student.student_id !== 'Not provided' && (
@@ -147,28 +139,14 @@ const StudentCard = ({ student, onStartSession, isCreatingSession }: StudentCard
           </div>
         )}
 
-        {/* Action Buttons */}
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex-1"
-            onClick={() => onStartSession(student.id, 'chat')}
-            disabled={isCreatingSession}
-          >
-            <MessageSquare className="h-4 w-4 mr-2" />
-            {isCreatingSession ? 'Starting...' : 'Chat'}
-          </Button>
-          <Button
-            size="sm"
-            className="flex-1"
-            onClick={() => onStartSession(student.id, 'video')}
-            disabled={isCreatingSession}
-          >
-            <Video className="h-4 w-4 mr-2" />
-            {isCreatingSession ? 'Starting...' : 'Video Call'}
-          </Button>
-        </div>
+        {/* Action Button */}
+        <Button
+          onClick={() => onStartSession(student.id)}
+          disabled={isCreatingSession}
+          className="w-full"
+        >
+          {isCreatingSession ? 'Starting Session...' : 'Start Session'}
+        </Button>
 
         {/* Contact Information */}
         <div className="pt-2 border-t space-y-2">
