@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -16,6 +17,9 @@ interface CounsellorData {
   is_available?: boolean;
   last_seen?: string;
   profile_image_url?: string;
+  total_sessions?: number;
+  completed_sessions?: number;
+  active_sessions?: number;
 }
 
 export const useCounsellors = () => {
@@ -29,18 +33,7 @@ export const useCounsellors = () => {
       
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
-        .select(`
-          *,
-          profile_metadata (
-            bio,
-            specialization,
-            license_number,
-            experience,
-            is_available,
-            last_seen,
-            profile_image_url
-          )
-        `)
+        .select('*')
         .eq('user_type', 'counsellor');
 
       if (profilesError) {
@@ -48,25 +41,25 @@ export const useCounsellors = () => {
         throw profilesError;
       }
 
-      // Map the data with metadata
-      const counsellorsWithMetadata = profilesData?.map(profile => {
-        const metadata = profile.profile_metadata?.[0] || {};
-        return {
-          id: profile.id,
-          first_name: profile.first_name,
-          last_name: profile.last_name,
-          email: profile.email,
-          phone: profile.phone,
-          user_type: profile.user_type,
-          specialization: metadata.specialization || 'General Counselling',
-          license_number: metadata.license_number || 'Not specified',
-          experience: metadata.experience || 'Not specified',
-          bio: metadata.bio || 'Professional counsellor dedicated to helping students achieve mental wellness.',
-          is_available: metadata.is_available !== false, // Default to true if not set
-          last_seen: metadata.last_seen || profile.updated_at,
-          profile_image_url: metadata.profile_image_url,
-        };
-      }) || [];
+      // Map the data with proper metadata access
+      const counsellorsWithMetadata = profilesData?.map(profile => ({
+        id: profile.id,
+        first_name: profile.first_name,
+        last_name: profile.last_name,
+        email: profile.email,
+        phone: profile.phone,
+        user_type: profile.user_type,
+        specialization: profile.specialization || 'General Counselling',
+        license_number: profile.license_number || 'Not specified',
+        experience: profile.experience || 'Not specified',
+        bio: 'Professional counsellor dedicated to helping students achieve mental wellness.',
+        is_available: true, // Can be enhanced with real-time presence
+        last_seen: profile.last_seen || profile.updated_at,
+        profile_image_url: undefined, // Can be added later with file upload
+        total_sessions: profile.total_sessions || 0,
+        completed_sessions: profile.completed_sessions || 0,
+        active_sessions: profile.active_sessions || 0,
+      })) || [];
 
       console.log('Counsellors with metadata:', counsellorsWithMetadata);
       setCounsellors(counsellorsWithMetadata);

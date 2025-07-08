@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -18,6 +19,9 @@ interface StudentData {
   assessment_score?: number;
   risk_level?: string;
   last_assessment_date?: string;
+  total_sessions?: number;
+  completed_sessions?: number;
+  active_sessions?: number;
 }
 
 export const useStudents = () => {
@@ -29,20 +33,10 @@ export const useStudents = () => {
     try {
       console.log('Fetching students...');
       
-      // First, get all student profiles with metadata
+      // First, get all student profiles
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
-        .select(`
-          *,
-          profile_metadata (
-            bio,
-            student_id,
-            department,
-            level,
-            last_seen,
-            profile_image_url
-          )
-        `)
+        .select('*')
         .eq('user_type', 'student');
 
       if (profilesError) {
@@ -61,9 +55,8 @@ export const useStudents = () => {
         // Don't throw here, just log - assessments are optional
       }
 
-      // Combine profile data with metadata and assessment data
+      // Combine profile data with assessment data
       const studentsWithAssessments = profilesData?.map(profile => {
-        const metadata = profile.profile_metadata?.[0] || {};
         const latestAssessment = assessmentsData?.find(
           assessment => assessment.student_id === profile.id
         );
@@ -75,16 +68,20 @@ export const useStudents = () => {
           email: profile.email,
           phone: profile.phone,
           user_type: profile.user_type,
-          student_id: metadata.student_id || 'Not provided',
-          department: metadata.department || 'Not specified',
-          level: metadata.level || 'Not specified',
-          bio: metadata.bio || 'Student seeking mental health support.',
-          last_seen: metadata.last_seen || profile.updated_at,
-          profile_image_url: metadata.profile_image_url,
+          student_id: profile.student_id || 'Not provided',
+          department: profile.department || 'Not specified',
+          level: profile.level || 'Not specified',
+          bio: 'Student seeking mental health support.',
+          last_seen: profile.last_seen || profile.updated_at,
+          profile_image_url: undefined, // Can be added later with file upload
           // Assessment data
           assessment_score: latestAssessment?.score,
           risk_level: latestAssessment?.risk_level,
           last_assessment_date: latestAssessment?.created_at,
+          // Session statistics
+          total_sessions: profile.total_sessions || 0,
+          completed_sessions: profile.completed_sessions || 0,
+          active_sessions: profile.active_sessions || 0,
         };
       }) || [];
 

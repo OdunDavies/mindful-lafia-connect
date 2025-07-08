@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useCounsellors } from '@/hooks/useCounsellors';
 import { useCounsellingSession } from '@/hooks/useCounsellingSession';
-import CounsellorCard from '@/components/contact/CounsellorCard';
+import { EnhancedCounsellorCard } from '@/components/contact/EnhancedCounsellorCard';
 import EmergencySupport from '@/components/contact/EmergencySupport';
 import CounsellorView from '@/components/contact/CounsellorView';
 import { Search, Filter, Heart, Users } from 'lucide-react';
@@ -80,7 +80,7 @@ const Contact = () => {
             </Button>
           </div>
 
-          {/* Counsellors Grid */}
+          {/* Enhanced Counsellors Grid */}
           {filteredCounsellors.length === 0 ? (
             <Card className="text-center py-12">
               <CardContent>
@@ -97,7 +97,7 @@ const Contact = () => {
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredCounsellors.map((counsellor) => (
-                <CounsellorCard
+                <EnhancedCounsellorCard
                   key={counsellor.id}
                   counsellor={counsellor}
                   onStartSession={handleStartSession}

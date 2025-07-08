@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useStudents } from '@/hooks/useStudents';
 import { useCounsellingSession } from '@/hooks/useCounsellingSession';
-import StudentCard from '@/components/contact/StudentCard';
+import EnhancedStudentCard from '@/components/contact/EnhancedStudentCard';
 import { Search, Filter, Users, GraduationCap } from 'lucide-react';
 
 const CounsellorView = () => {
@@ -69,7 +69,7 @@ const CounsellorView = () => {
         </Button>
       </div>
 
-      {/* Students Grid */}
+      {/* Enhanced Students Grid */}
       {filteredStudents.length === 0 ? (
         <Card className="text-center py-12">
           <CardContent>
@@ -86,7 +86,7 @@ const CounsellorView = () => {
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredStudents.map((student) => (
-            <StudentCard
+            <EnhancedStudentCard
               key={student.id}
               student={student}
               onStartSession={handleStartSession}
