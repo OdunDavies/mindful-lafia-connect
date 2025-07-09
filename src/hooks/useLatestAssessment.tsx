@@ -39,7 +39,20 @@ export const useLatestAssessment = () => {
         throw error;
       }
 
-      setAssessment(data);
+      if (data) {
+        // Transform the data to match our interface
+        const transformedAssessment: AssessmentResult = {
+          id: data.id,
+          score: data.score,
+          risk_level: data.risk_level,
+          recommendations: data.recommendations || '',
+          created_at: data.created_at || '',
+          responses: data.responses as Record<string, number>
+        };
+        setAssessment(transformedAssessment);
+      } else {
+        setAssessment(null);
+      }
     } catch (error) {
       console.error('Error fetching latest assessment:', error);
       toast({
