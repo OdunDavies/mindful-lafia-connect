@@ -104,14 +104,6 @@ function AppRoutes() {
         }
       />
       <Route
-        path="/contact"
-        element={
-          <ProtectedRoute>
-            <Contact />
-          </ProtectedRoute>
-        }
-      />
-      <Route
         path="/resources"
         element={
           <ProtectedRoute>

@@ -1,9 +1,10 @@
+
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useAuth } from '@/hooks/useAuth';
-import { Heart, Menu, LogOut, User, Home, Users, BookOpen, ClipboardCheck, MessageSquare, Info, Video } from 'lucide-react';
+import { Heart, Menu, LogOut, User, Home, BookOpen, ClipboardCheck, Video, Info } from 'lucide-react';
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -22,7 +23,6 @@ const Navigation = () => {
 
   const studentNavItems = [
     { name: 'Home', path: '/', icon: Home },
-    { name: 'Find Counsellor', path: '/contact', icon: Users },
     { name: 'Self Assessment', path: '/assessment', icon: ClipboardCheck },
     { name: 'Resources', path: '/resources', icon: BookOpen },
     { name: 'Blog', path: '/blog', icon: Video },
@@ -31,7 +31,6 @@ const Navigation = () => {
 
   const counsellorNavItems = [
     { name: 'Home', path: '/', icon: Home },
-    { name: 'Students', path: '/contact', icon: Users },
     { name: 'Resources', path: '/resources', icon: BookOpen },
     { name: 'Blog', path: '/blog', icon: Video },
     { name: 'About', path: '/about', icon: Info },
@@ -74,12 +73,11 @@ const Navigation = () => {
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
-
             <img
-  src="/ful.jpg"
-  alt="Logo"
-  className="h-6 w-6 rounded-full object-cover"
-/>
+              src="/ful.jpg"
+              alt="Logo"
+              className="h-6 w-6 rounded-full object-cover"
+            />
             <span className="text-xl font-bold">FULAFIA Counselling</span>
           </Link>
 
