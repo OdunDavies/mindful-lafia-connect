@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import BasicProfileSection from '@/components/profile/BasicProfileSection';
+import EditableProfileSection from '@/components/profile/EditableProfileSection';
 import StudentProfileSection from '@/components/profile/StudentProfileSection';
 import CounsellorProfileSection from '@/components/profile/CounsellorProfileSection';
 
@@ -30,7 +30,7 @@ const Profile = () => {
           </p>
         </div>
 
-        <BasicProfileSection user={user} />
+        <EditableProfileSection user={user} />
         
         {userType === 'student' && <StudentProfileSection user={user} />}
         {userType === 'counsellor' && <CounsellorProfileSection user={user} />}
