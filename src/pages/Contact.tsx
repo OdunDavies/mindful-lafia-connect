@@ -6,7 +6,9 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useCounsellors } from '@/hooks/useCounsellors';
 import { useCounsellingSession } from '@/hooks/useCounsellingSession';
+import { useAssignedCounsellor } from '@/hooks/useAssignedCounsellor';
 import { EnhancedCounsellorCard } from '@/components/contact/EnhancedCounsellorCard';
+import { CounsellorInfoCard } from '@/components/counsellor/CounsellorInfoCard';
 import EmergencySupport from '@/components/contact/EmergencySupport';
 import CounsellorView from '@/components/contact/CounsellorView';
 import { Search, Filter, Heart, Users } from 'lucide-react';
@@ -16,6 +18,7 @@ const Contact = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const { user } = useAuth();
   const { counsellors, loading } = useCounsellors();
+  const { counsellor: assignedCounsellor, loading: assignedLoading } = useAssignedCounsellor();
   const { handleStartSession, creatingSession } = useCounsellingSession();
 
   const userType = user?.user_metadata?.user_type || 'student';
@@ -36,7 +39,7 @@ const Contact = () => {
     setFilteredCounsellors(filtered);
   };
 
-  if (loading) {
+  if (loading || assignedLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
@@ -64,48 +67,67 @@ const Contact = () => {
 
       {userType === 'student' && (
         <>
-          {/* Search */}
-          <div className="flex flex-col md:flex-row gap-4 mb-8">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                placeholder="Search by name..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <Button variant="outline" size="sm">
-              <Filter className="h-4 w-4" />
-            </Button>
-          </div>
-
-          {/* Enhanced Counsellors Grid */}
-          {filteredCounsellors.length === 0 ? (
-            <Card className="text-center py-12">
-              <CardContent>
-                <Users className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-xl font-semibold mb-2">No counsellors found</h3>
-                <p className="text-muted-foreground mb-4">
-                  {counsellors.length === 0 
-                    ? "No counsellors are currently registered on the platform."
-                    : "Try adjusting your search criteria to find counsellors."
-                  }
-                </p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredCounsellors.map((counsellor) => (
-                <EnhancedCounsellorCard
-                  key={counsellor.id}
-                  counsellor={counsellor}
+          {/* Assigned Counsellor Section */}
+          {assignedCounsellor && (
+            <section className="mb-12">
+              <h2 className="text-2xl font-semibold text-center mb-6">Your Assigned Counsellor</h2>
+              <div className="flex justify-center">
+                <CounsellorInfoCard
+                  counsellor={assignedCounsellor}
                   onStartSession={handleStartSession}
-                  isCreatingSession={creatingSession === counsellor.id}
+                  isCreatingSession={creatingSession === assignedCounsellor.id}
                 />
-              ))}
-            </div>
+              </div>
+            </section>
           )}
+
+          {/* All Counsellors Section */}
+          <section>
+            <h2 className="text-2xl font-semibold text-center mb-6">All Available Counsellors</h2>
+            
+            {/* Search */}
+            <div className="flex flex-col md:flex-row gap-4 mb-8">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                <Input
+                  placeholder="Search by name..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <Button variant="outline" size="sm">
+                <Filter className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {/* Enhanced Counsellors Grid */}
+            {filteredCounsellors.length === 0 ? (
+              <Card className="text-center py-12">
+                <CardContent>
+                  <Users className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold mb-2">No counsellors found</h3>
+                  <p className="text-muted-foreground mb-4">
+                    {counsellors.length === 0 
+                      ? "No counsellors are currently registered on the platform."
+                      : "Try adjusting your search criteria to find counsellors."
+                    }
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredCounsellors.map((counsellor) => (
+                  <EnhancedCounsellorCard
+                    key={counsellor.id}
+                    counsellor={counsellor}
+                    onStartSession={handleStartSession}
+                    isCreatingSession={creatingSession === counsellor.id}
+                  />
+                ))}
+              </div>
+            )}
+          </section>
 
           <EmergencySupport />
         </>

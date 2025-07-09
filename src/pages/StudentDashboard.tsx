@@ -4,6 +4,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
+import { useAssignedCounsellor } from '@/hooks/useAssignedCounsellor';
+import { useCounsellingSession } from '@/hooks/useCounsellingSession';
+import { CounsellorInfoCard } from '@/components/counsellor/CounsellorInfoCard';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -24,6 +27,8 @@ const StudentDashboard = () => {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
   const { user, signOut } = useAuth();
+  const { counsellor, loading: counsellorLoading } = useAssignedCounsellor();
+  const { handleStartSession, creatingSession } = useCounsellingSession();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -80,7 +85,7 @@ const StudentDashboard = () => {
     }
   };
 
-  if (loading) {
+  if (loading || counsellorLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
@@ -111,6 +116,20 @@ const StudentDashboard = () => {
 
       <div className="container mx-auto px-4 py-8">
         <div className="grid gap-6">
+          {/* Assigned Counsellor */}
+          {counsellor && (
+            <section>
+              <h2 className="text-xl font-semibold mb-4">Your Assigned Counsellor</h2>
+              <div className="flex justify-center">
+                <CounsellorInfoCard
+                  counsellor={counsellor}
+                  onStartSession={handleStartSession}
+                  isCreatingSession={creatingSession === counsellor.id}
+                />
+              </div>
+            </section>
+          )}
+
           {/* Quick Actions */}
           <section>
             <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
@@ -127,13 +146,13 @@ const StudentDashboard = () => {
                 </CardHeader>
               </Card>
               
-              <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/contact')}>
+              <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/self-assessment')}>
                 <CardHeader className="pb-4">
                   <div className="flex items-center gap-3">
                     <MessageSquare className="h-8 w-8 text-primary" />
                     <div>
-                      <CardTitle className="text-lg">Chat Support</CardTitle>
-                      <CardDescription>Text-based counselling</CardDescription>
+                      <CardTitle className="text-lg">Self Assessment</CardTitle>
+                      <CardDescription>Take a mental health assessment</CardDescription>
                     </div>
                   </div>
                 </CardHeader>

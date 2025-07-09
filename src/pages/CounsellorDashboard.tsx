@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,7 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import { Calendar, MessageSquare, Video, Clock, Users, LogOut } from 'lucide-react';
+import { Calendar, MessageSquare, Video, Clock, Users, LogOut, Mail, User } from 'lucide-react';
 
 interface Session {
   id: string;
@@ -17,11 +16,30 @@ interface Session {
   student: {
     first_name: string;
     last_name: string;
+    email: string;
+    phone?: string;
+    student_id?: string;
+    department?: string;
+    level?: string;
   };
+}
+
+interface StudentContact {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone?: string;
+  student_id?: string;
+  department?: string;
+  level?: string;
+  last_contact: string;
+  session_count: number;
 }
 
 const CounsellorDashboard = () => {
   const [sessions, setSessions] = useState<Session[]>([]);
+  const [studentContacts, setStudentContacts] = useState<StudentContact[]>([]);
   const [loading, setLoading] = useState(true);
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
@@ -30,6 +48,7 @@ const CounsellorDashboard = () => {
   useEffect(() => {
     if (user) {
       fetchSessions();
+      fetchStudentContacts();
     }
   }, [user]);
 
@@ -42,7 +61,15 @@ const CounsellorDashboard = () => {
           status,
           scheduled_at,
           created_at,
-          student:profiles!counselling_sessions_student_id_fkey(first_name, last_name)
+          student:profiles!counselling_sessions_student_id_fkey(
+            first_name, 
+            last_name, 
+            email, 
+            phone, 
+            student_id, 
+            department, 
+            level
+          )
         `)
         .eq('counsellor_id', user?.id)
         .order('created_at', { ascending: false });
@@ -58,6 +85,61 @@ const CounsellorDashboard = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchStudentContacts = async () => {
+    try {
+      // Get all students who have had sessions with this counsellor
+      const { data, error } = await supabase
+        .from('counselling_sessions')
+        .select(`
+          student_id,
+          created_at,
+          student:profiles!counselling_sessions_student_id_fkey(
+            id,
+            first_name, 
+            last_name, 
+            email, 
+            phone, 
+            student_id, 
+            department, 
+            level
+          )
+        `)
+        .eq('counsellor_id', user?.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      // Group by student and get latest contact info
+      const studentMap = new Map();
+      data?.forEach((session) => {
+        const studentId = session.student_id;
+        if (!studentMap.has(studentId)) {
+          studentMap.set(studentId, {
+            ...session.student,
+            last_contact: session.created_at,
+            session_count: 1
+          });
+        } else {
+          const existing = studentMap.get(studentId);
+          existing.session_count += 1;
+          // Keep the most recent contact date
+          if (new Date(session.created_at) > new Date(existing.last_contact)) {
+            existing.last_contact = session.created_at;
+          }
+        }
+      });
+
+      setStudentContacts(Array.from(studentMap.values()));
+    } catch (error) {
+      console.error('Error fetching student contacts:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load student contacts",
+        variant: "destructive",
+      });
     }
   };
 
@@ -132,10 +214,8 @@ const CounsellorDashboard = () => {
               </Card>
               <Card>
                 <CardHeader className="pb-2">
-                  <CardDescription>Pending Sessions</CardDescription>
-                  <CardTitle className="text-2xl">
-                    {sessions.filter(s => s.status === 'pending').length}
-                  </CardTitle>
+                  <CardDescription>Students Helped</CardDescription>
+                  <CardTitle className="text-2xl">{studentContacts.length}</CardTitle>
                 </CardHeader>
               </Card>
               <Card>
@@ -149,9 +229,71 @@ const CounsellorDashboard = () => {
             </div>
           </section>
 
+          {/* Student Contacts */}
+          <section>
+            <h2 className="text-xl font-semibold mb-4">Students Who Have Contacted You</h2>
+            {studentContacts.length === 0 ? (
+              <Card>
+                <CardContent className="pt-6 text-center">
+                  <User className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">No student contacts yet</h3>
+                  <p className="text-muted-foreground">
+                    Students who book sessions with you will appear here
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {studentContacts.map((student) => (
+                  <Card key={student.id}>
+                    <CardContent className="pt-6">
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <h3 className="font-semibold">
+                            {student.first_name} {student.last_name}
+                          </h3>
+                          <Badge variant="secondary">
+                            {student.session_count} session{student.session_count > 1 ? 's' : ''}
+                          </Badge>
+                        </div>
+                        
+                        <div className="space-y-2 text-sm">
+                          {student.student_id && (
+                            <div className="flex items-center gap-2">
+                              <User className="h-4 w-4 text-muted-foreground" />
+                              <span>ID: {student.student_id}</span>
+                            </div>
+                          )}
+                          <div className="flex items-center gap-2">
+                            <Mail className="h-4 w-4 text-muted-foreground" />
+                            <span className="truncate">{student.email}</span>
+                          </div>
+                          {student.phone && (
+                            <div className="flex items-center gap-2">
+                              <Clock className="h-4 w-4 text-muted-foreground" />
+                              <span>{student.phone}</span>
+                            </div>
+                          )}
+                          {student.department && (
+                            <div className="text-muted-foreground">
+                              {student.department} - Level {student.level}
+                            </div>
+                          )}
+                          <div className="text-xs text-muted-foreground">
+                            Last contact: {new Date(student.last_contact).toLocaleDateString()}
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </section>
+
           {/* Sessions */}
           <section>
-            <h2 className="text-xl font-semibold mb-4">Your Sessions</h2>
+            <h2 className="text-xl font-semibold mb-4">Recent Sessions</h2>
             {sessions.length === 0 ? (
               <Card>
                 <CardContent className="pt-6 text-center">
@@ -164,7 +306,7 @@ const CounsellorDashboard = () => {
               </Card>
             ) : (
               <div className="space-y-4">
-                {sessions.map((session) => (
+                {sessions.slice(0, 5).map((session) => (
                   <Card key={session.id}>
                     <CardContent className="pt-6">
                       <div className="flex items-center justify-between">
@@ -178,7 +320,7 @@ const CounsellorDashboard = () => {
                               <Clock className="h-4 w-4" />
                               {session.scheduled_at 
                                 ? new Date(session.scheduled_at).toLocaleString()
-                                : 'Immediate session'
+                                : new Date(session.created_at).toLocaleString()
                               }
                             </div>
                           </div>
