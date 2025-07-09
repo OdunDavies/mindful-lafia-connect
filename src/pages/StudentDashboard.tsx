@@ -10,7 +10,7 @@ import { CounsellorInfoCard } from '@/components/counsellor/CounsellorInfoCard';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import { Calendar, MessageSquare, Video, Clock, User, LogOut } from 'lucide-react';
+import { Calendar, MessageSquare, Video, Clock, User, LogOut, Users } from 'lucide-react';
 
 interface Session {
   id: string;
@@ -104,6 +104,7 @@ const StudentDashboard = () => {
           </div>
           <div className="flex items-center gap-4">
             <Button variant="outline" onClick={() => navigate('/contact')}>
+              <Users className="h-4 w-4 mr-2" />
               Find Counsellor
             </Button>
             <Button variant="ghost" onClick={handleSignOut}>
@@ -146,7 +147,7 @@ const StudentDashboard = () => {
                 </CardHeader>
               </Card>
               
-              <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/self-assessment')}>
+              <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/assessment')}>
                 <CardHeader className="pb-4">
                   <div className="flex items-center gap-3">
                     <MessageSquare className="h-8 w-8 text-primary" />

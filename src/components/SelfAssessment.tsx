@@ -321,7 +321,7 @@ const SelfAssessment = () => {
             onClick={nextQuestion}
             disabled={answers[currentQ.id] === undefined || loading}
           >
-            {currentQuestion === questions.length - 1 ? 'Complete Assessment' : 'Next'}
+            {loading ? 'Saving...' : (currentQuestion === questions.length - 1 ? 'Complete Assessment' : 'Next')}
           </Button>
         </div>
       </CardContent>
