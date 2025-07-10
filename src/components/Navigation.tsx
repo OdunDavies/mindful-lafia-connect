@@ -25,6 +25,7 @@ const Navigation = () => {
     { name: 'Home', path: '/', icon: Home },
     { name: 'Self Assessment', path: '/assessment', icon: ClipboardCheck },
     { name: 'Resources', path: '/resources', icon: BookOpen },
+    { name: 'Contact', path: '/contact', icon: User },
     { name: 'Blog', path: '/blog', icon: Video },
     { name: 'About', path: '/about', icon: Info },
   ];
