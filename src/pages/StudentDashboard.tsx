@@ -103,7 +103,7 @@ const StudentDashboard = () => {
             <p className="text-muted-foreground">Welcome back, {user?.user_metadata?.first_name || 'Student'}</p>
           </div>
           <div className="flex items-center gap-4">
-            <Button variant="outline" onClick={() => navigate('/contact-page')}>
+            <Button variant="outline" onClick={() => navigate('/counsellors')}>
               <Users className="h-4 w-4 mr-2" />
               Find Counsellor
             </Button>
@@ -135,13 +135,13 @@ const StudentDashboard = () => {
           <section>
             <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
             <div className="grid md:grid-cols-3 gap-4">
-              <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/contact-page')}>
+              <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/counsellors')}>
                 <CardHeader className="pb-4">
                   <div className="flex items-center gap-3">
                     <Video className="h-8 w-8 text-primary" />
                     <div>
-                      <CardTitle className="text-lg">Start Video Session</CardTitle>
-                      <CardDescription>Connect with a counsellor now</CardDescription>
+                      <CardTitle className="text-lg">Find Counsellors</CardTitle>
+                      <CardDescription>Browse and connect with counsellors</CardDescription>
                     </div>
                   </div>
                 </CardHeader>
@@ -153,7 +153,7 @@ const StudentDashboard = () => {
                     <MessageSquare className="h-8 w-8 text-primary" />
                     <div>
                       <CardTitle className="text-lg">Self Assessment</CardTitle>
-                      <CardDescription>Take a mental health assessment</CardDescription>
+                      <CardDescription>Take a mental health quiz</CardDescription>
                     </div>
                   </div>
                 </CardHeader>
@@ -184,7 +184,7 @@ const StudentDashboard = () => {
                   <p className="text-muted-foreground mb-4">
                     Start your mental health journey by connecting with a counsellor
                   </p>
-                  <Button onClick={() => navigate('/contact-page')}>Find a Counsellor</Button>
+                  <Button onClick={() => navigate('/counsellors')}>Find a Counsellor</Button>
                 </CardContent>
               </Card>
             ) : (
