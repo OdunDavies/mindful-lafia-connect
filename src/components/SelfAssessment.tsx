@@ -98,21 +98,10 @@ const SelfAssessment = () => {
   const navigate = useNavigate();
 
   const handleAnswer = (questionId: string, value: number) => {
-    console.log(`Answer selected for ${questionId}: ${value}`);
     setAnswers(prev => ({ ...prev, [questionId]: value }));
   };
 
   const nextQuestion = () => {
-    const currentQ = questions[currentQuestion];
-    if (answers[currentQ.id] === undefined) {
-      toast({
-        title: "Please select an answer",
-        description: "You must select an answer before proceeding.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     if (currentQuestion < questions.length - 1) {
       setCurrentQuestion(prev => prev + 1);
     } else {
@@ -130,8 +119,6 @@ const SelfAssessment = () => {
     const totalScore = Object.values(answers).reduce((sum, score) => sum + score, 0);
     const maxScore = questions.length * 3;
     const percentage = (totalScore / maxScore) * 100;
-
-    console.log(`Total Score: ${totalScore}/${maxScore} (${percentage.toFixed(1)}%)`);
 
     let riskLevel: 'low' | 'moderate' | 'high';
     let recommendations: string;
@@ -176,29 +163,20 @@ const SelfAssessment = () => {
 
   const completeAssessment = async () => {
     setLoading(true);
-    console.log('Completing assessment with answers:', answers);
-    
     try {
       const results = calculateResults();
-      console.log('Assessment results:', results);
       
-      // Save to database
-      if (user?.id) {
-        const { error } = await supabase
-          .from('self_assessments')
-          .insert({
-            student_id: user.id,
-            score: results.totalScore,
-            risk_level: results.riskLevel,
-            responses: answers,
-            recommendations: results.recommendations
-          });
+      const { error } = await supabase
+        .from('self_assessments')
+        .insert({
+          student_id: user?.id,
+          score: results.totalScore,
+          risk_level: results.riskLevel,
+          responses: answers,
+          recommendations: results.recommendations
+        });
 
-        if (error) {
-          console.error('Database error:', error);
-          throw error;
-        }
-      }
+      if (error) throw error;
 
       setAssessmentResults(results);
       setIsCompleted(true);
@@ -209,14 +187,9 @@ const SelfAssessment = () => {
       });
     } catch (error) {
       console.error('Error saving assessment:', error);
-      // Still show results even if saving fails
-      const results = calculateResults();
-      setAssessmentResults(results);
-      setIsCompleted(true);
-      
       toast({
-        title: "Assessment completed",
-        description: "Results calculated but couldn't save to database.",
+        title: "Error",
+        description: "Failed to save your assessment. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -298,7 +271,7 @@ const SelfAssessment = () => {
               Take Again
             </Button>
             <Button 
-              onClick={() => navigate('/counsellors')} 
+              onClick={() => navigate('/contact-page')} 
               className="flex-1"
               variant={assessmentResults.riskLevel === 'high' ? 'default' : 'outline'}
             >
@@ -312,7 +285,6 @@ const SelfAssessment = () => {
 
   const progress = ((currentQuestion + 1) / questions.length) * 100;
   const currentQ = questions[currentQuestion];
-  const isAnswered = answers[currentQ.id] !== undefined;
 
   return (
     <Card className="max-w-2xl mx-auto">
@@ -336,7 +308,7 @@ const SelfAssessment = () => {
             {currentQ.options.map((option) => (
               <div key={option.value} className="flex items-center space-x-2">
                 <RadioGroupItem value={option.value.toString()} id={`${currentQ.id}-${option.value}`} />
-                <Label htmlFor={`${currentQ.id}-${option.value}`} className="flex-1 cursor-pointer">
+                <Label htmlFor={`${currentQ.id}-${option.value}`} className="flex-1">
                   {option.label}
                 </Label>
               </div>
@@ -354,9 +326,9 @@ const SelfAssessment = () => {
           </Button>
           <Button 
             onClick={nextQuestion}
-            disabled={!isAnswered || loading}
+            disabled={answers[currentQ.id] === undefined || loading}
           >
-            {loading ? 'Calculating...' : (currentQuestion === questions.length - 1 ? 'Complete Assessment' : 'Next')}
+            {loading ? 'Saving...' : (currentQuestion === questions.length - 1 ? 'Complete Assessment' : 'Next')}
           </Button>
         </div>
       </CardContent>

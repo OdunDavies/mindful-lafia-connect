@@ -61,7 +61,7 @@ function AppRoutes() {
     }
     
     if (user) {
-      return <Navigate to="/student-dashboard" replace />;
+      return <Navigate to="/" replace />;
     }
     
     return <>{children}</>;
@@ -93,23 +93,7 @@ function AppRoutes() {
         path="/"
         element={
           <ProtectedRoute>
-            <StudentDashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/home"
-        element={
-          <ProtectedRoute>
             <Home />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/student-dashboard"
-        element={
-          <ProtectedRoute>
-            <StudentDashboard />
           </ProtectedRoute>
         }
       />
@@ -126,14 +110,6 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Contact />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/counsellors"
-        element={
-          <ProtectedRoute>
-            <ContactPage />
           </ProtectedRoute>
         }
       />
@@ -178,18 +154,18 @@ function AppRoutes() {
         }
       />
       <Route
-        path="/quiz"
-        element={
-          <ProtectedRoute>
-            <SelfAssessmentPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
         path="/video-call"
         element={
           <ProtectedRoute>
             <VideoCall />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/student-dashboard"
+        element={
+          <ProtectedRoute>
+            <StudentDashboard />
           </ProtectedRoute>
         }
       />
