@@ -17,6 +17,13 @@ interface Question {
   options: { value: number; label: string }[];
 }
 
+interface AssessmentResult {
+  totalScore: number;
+  riskLevel: 'low' | 'moderate' | 'high';
+  recommendations: string;
+  detailedAdvice: string[];
+}
+
 const questions: Question[] = [
   {
     id: 'sleep',
@@ -84,7 +91,7 @@ const SelfAssessment = () => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [isCompleted, setIsCompleted] = useState(false);
-  const [result, setResult] = useState<any>(null);
+  const [assessmentResults, setAssessmentResults] = useState<AssessmentResult | null>(null);
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
@@ -108,7 +115,7 @@ const SelfAssessment = () => {
     }
   };
 
-  const calculateResult = () => {
+  const calculateResults = (): AssessmentResult => {
     const totalScore = Object.values(answers).reduce((sum, score) => sum + score, 0);
     const maxScore = questions.length * 3;
     const percentage = (totalScore / maxScore) * 100;
@@ -157,21 +164,21 @@ const SelfAssessment = () => {
   const completeAssessment = async () => {
     setLoading(true);
     try {
-      const assessment = calculateResult();
+      const results = calculateResults();
       
       const { error } = await supabase
         .from('self_assessments')
         .insert({
           student_id: user?.id,
-          score: assessment.totalScore,
-          risk_level: assessment.riskLevel,
+          score: results.totalScore,
+          risk_level: results.riskLevel,
           responses: answers,
-          recommendations: assessment.recommendations
+          recommendations: results.recommendations
         });
 
       if (error) throw error;
 
-      setResult(assessment);
+      setAssessmentResults(results);
       setIsCompleted(true);
       
       toast({
@@ -194,37 +201,37 @@ const SelfAssessment = () => {
     setCurrentQuestion(0);
     setAnswers({});
     setIsCompleted(false);
-    setResult(null);
+    setAssessmentResults(null);
   };
 
-  if (isCompleted && result) {
+  if (isCompleted && assessmentResults) {
     return (
       <Card className="max-w-4xl mx-auto">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            {result.riskLevel === 'low' && <CheckCircle className="h-16 w-16 text-green-500" />}
-            {result.riskLevel === 'moderate' && <Info className="h-16 w-16 text-yellow-500" />}
-            {result.riskLevel === 'high' && <AlertTriangle className="h-16 w-16 text-red-500" />}
+            {assessmentResults.riskLevel === 'low' && <CheckCircle className="h-16 w-16 text-green-500" />}
+            {assessmentResults.riskLevel === 'moderate' && <Info className="h-16 w-16 text-yellow-500" />}
+            {assessmentResults.riskLevel === 'high' && <AlertTriangle className="h-16 w-16 text-red-500" />}
           </div>
           <CardTitle className="text-2xl">Assessment Complete</CardTitle>
           <CardDescription>
             Risk Level: <span className={`font-semibold ${
-              result.riskLevel === 'low' ? 'text-green-600' :
-              result.riskLevel === 'moderate' ? 'text-yellow-600' : 'text-red-600'
+              assessmentResults.riskLevel === 'low' ? 'text-green-600' :
+              assessmentResults.riskLevel === 'moderate' ? 'text-yellow-600' : 'text-red-600'
             }`}>
-              {result.riskLevel.charAt(0).toUpperCase() + result.riskLevel.slice(1)}
+              {assessmentResults.riskLevel.charAt(0).toUpperCase() + assessmentResults.riskLevel.slice(1)}
             </span>
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="text-center">
-            <p className="text-3xl font-bold">{result.totalScore}/18</p>
+            <p className="text-3xl font-bold">{assessmentResults.totalScore}/18</p>
             <p className="text-muted-foreground">Total Score</p>
           </div>
           
           <div className="bg-muted p-4 rounded-lg">
             <h3 className="font-semibold mb-2">Summary</h3>
-            <p className="text-sm">{result.recommendations}</p>
+            <p className="text-sm">{assessmentResults.recommendations}</p>
           </div>
 
           <div className="bg-card border rounded-lg p-4">
@@ -233,7 +240,7 @@ const SelfAssessment = () => {
               Personalized Recommendations
             </h3>
             <ul className="space-y-2">
-              {result.detailedAdvice.map((advice: string, index: number) => (
+              {assessmentResults.detailedAdvice.map((advice: string, index: number) => (
                 <li key={index} className="flex items-start gap-2 text-sm">
                   <span className="text-primary mt-1">•</span>
                   <span>{advice}</span>
@@ -242,7 +249,7 @@ const SelfAssessment = () => {
             </ul>
           </div>
 
-          {result.riskLevel === 'high' && (
+          {assessmentResults.riskLevel === 'high' && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-4">
               <h3 className="font-semibold text-red-800 mb-2 flex items-center gap-2">
                 <Phone className="h-4 w-4" />
@@ -264,11 +271,11 @@ const SelfAssessment = () => {
               Take Again
             </Button>
             <Button 
-              onClick={() => navigate('/contact')} 
+              onClick={() => navigate('/contact-page')} 
               className="flex-1"
-              variant={result.riskLevel === 'high' ? 'default' : 'outline'}
+              variant={assessmentResults.riskLevel === 'high' ? 'default' : 'outline'}
             >
-              {result.riskLevel === 'high' ? 'Get Immediate Help' : 'Contact Counsellor'}
+              {assessmentResults.riskLevel === 'high' ? 'Get Immediate Help' : 'Contact Counsellor'}
             </Button>
           </div>
         </CardContent>
