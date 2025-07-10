@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,6 +8,7 @@ import Index from "./pages/Index";
 import Home from "./pages/Home";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
+import ContactPage from "./pages/ContactPage";
 import Resources from "./pages/Resources";
 import Blog from "./pages/Blog";
 import SignUp from "./pages/SignUp";
@@ -109,6 +109,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Contact />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/contact-page"
+        element={
+          <ProtectedRoute>
+            <ContactPage />
           </ProtectedRoute>
         }
       />
