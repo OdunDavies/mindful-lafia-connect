@@ -8,7 +8,6 @@ import Index from "./pages/Index";
 import Home from "./pages/Home";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
-import ContactPage from "./pages/ContactPage";
 import Resources from "./pages/Resources";
 import Blog from "./pages/Blog";
 import SignUp from "./pages/SignUp";
@@ -112,14 +111,7 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
-      <Route
-        path="/contact-page"
-        element={
-          <ProtectedRoute>
-            <ContactPage />
-          </ProtectedRoute>
-        }
-      />
+     />
       <Route
         path="/resources"
         element={
